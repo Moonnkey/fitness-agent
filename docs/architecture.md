@@ -231,10 +231,12 @@ Fields:
 - `id`
 - `date`
 - `weight_kg`
+- `raw_text`
+- `metadata_json`
 - `note`
 - `created_at`
 
-This can be implemented after meals and summaries.
+Third-stage scope: implement weight recording and a simple trend summary with latest weight and 7-day average.
 
 ### ActivityEntry
 
@@ -248,10 +250,12 @@ Fields:
 - `duration_minutes`
 - `calories_burned`
 - `is_estimated`
+- `raw_text`
+- `metadata_json`
 - `note`
 - `created_at`
 
-This can be implemented after meals and summaries.
+Third-stage scope: implement simple activity recording. Do not implement structured strength programming, exercise libraries, muscle groups, or periodization yet.
 
 ## First Implementation Slice
 
@@ -274,6 +278,27 @@ Defer:
 - MCP tools.
 - RAG.
 - Skill.
+
+## Third Implementation Slice
+
+Implement:
+
+- `WeightEntry`.
+- `ActivityEntry`.
+- `weight_service`.
+- `activity_service`.
+- Summary activity calories and net calories.
+- CLI commands for weight and activity.
+- MCP tools for weight and activity.
+- Skill contract updates for weight and activity.
+
+Keep out of scope:
+
+- Structured exercise library.
+- Muscle-group mapping.
+- Training plan optimization.
+- RAG.
+- Food database lookup.
 
 ## Service API Draft
 
@@ -304,6 +329,26 @@ def list_meals_for_date(date: date) -> list[MealOutput]:
 
 ```python
 def get_daily_summary(date: date) -> DailySummaryOutput:
+    ...
+```
+
+### Weight Service
+
+```python
+def record_weight(input: WeightEntryInput) -> WeightEntryOutput:
+    ...
+
+def get_weight_trend(days: int = 7) -> WeightTrendOutput:
+    ...
+```
+
+### Activity Service
+
+```python
+def record_activity(input: ActivityEntryInput) -> ActivityEntryOutput:
+    ...
+
+def list_activities_for_date(date: date) -> list[ActivityEntryOutput]:
     ...
 ```
 
@@ -385,6 +430,8 @@ Minimum summary output:
 
 - Date.
 - Total calories.
+- Activity calories, when recorded.
+- Net calories, calculated as intake minus activity calories.
 - Total protein, carbs, and fat.
 - Target calories, if available.
 - Remaining calories, if available.
@@ -400,6 +447,45 @@ uv run fitness-agent dev reset-db --yes
 
 The reset command must require `--yes` and must not run by default.
 
+### Weight
+
+Prefer JSON input:
+
+```bash
+uv run fitness-agent weight add --json '{
+  "date": "today",
+  "weight_kg": 79.6,
+  "raw_text": "今天早上空腹 79.6kg",
+  "metadata": {
+    "timing": "morning fasting"
+  }
+}'
+```
+
+Show trend:
+
+```bash
+uv run fitness-agent weight trend --days 7
+```
+
+### Activity
+
+Prefer JSON input:
+
+```bash
+uv run fitness-agent activity add --json '{
+  "date": "today",
+  "activity_type": "walking",
+  "duration_minutes": 40,
+  "calories_burned": 180,
+  "is_estimated": true,
+  "raw_text": "今天快走 40 分钟",
+  "metadata": {
+    "estimation_basis": "moderate brisk walk estimate"
+  }
+}'
+```
+
 ## MCP Strategy
 
 Add MCP after the first CLI slice works.
@@ -410,6 +496,10 @@ Initial MCP tools:
 - `get_user_profile`
 - `record_meal`
 - `get_daily_summary`
+- Third-stage additions:
+  - `record_weight`
+  - `get_weight_trend`
+  - `record_activity`
 
 MCP tool inputs should mirror Pydantic schemas. MCP tools should not implement business logic directly.
 
@@ -426,6 +516,7 @@ The Skill should explain:
 - When to ask follow-up questions.
 - When estimates are acceptable.
 - How to mark uncertainty in user-facing replies.
+- How to record weight and activity without over-interpreting training data.
 
 ## Testing Strategy
 
@@ -439,6 +530,9 @@ Initial tests:
 - Daily summary reports estimated item count.
 - Empty day summary returns zero totals.
 - CLI help works.
+- Weight can be recorded and trend output returns latest and average values.
+- Activity can be recorded and daily summary includes activity calories.
+- MCP tools expose weight and activity operations.
 
 Testing rules:
 
@@ -460,6 +554,13 @@ Do not implement these in the first slice:
 - Cloud sync.
 - Multi-user support.
 - Model fine-tuning.
+
+Third-stage non-goals:
+
+- Full workout programming.
+- Exercise library.
+- Muscle-group recovery analysis.
+- Wearable import.
 
 ## Open Decisions
 

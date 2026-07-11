@@ -118,6 +118,18 @@ The second milestone is complete when:
 5. Basic Skill instructions exist.
 ```
 
+## Suggested Third Milestone
+
+The third milestone is complete when:
+
+```text
+1. Record one weight entry through CLI and MCP.
+2. Return latest weight and a simple 7-day average when enough data exists.
+3. Record one activity entry through CLI and MCP.
+4. Daily summary includes activity calories and net calories.
+5. Skill tool contracts document weight and activity tools.
+```
+
 ## Data Quality Principles
 
 - Prefer structured values over free text once data reaches core services.
@@ -137,7 +149,7 @@ The second milestone is complete when:
 After the MVP works:
 
 - Add a food knowledge source or nutrition database.
-- Add weekly trend analysis.
+- Add weekly trend analysis beyond the simple 7-day weight average.
 - Add structured strength training logs with exercise and muscle-group mapping.
 - Add RAG for nutrition and training knowledge.
 - Add an installable plugin package.
