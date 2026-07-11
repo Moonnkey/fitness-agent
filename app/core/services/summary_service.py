@@ -1,16 +1,20 @@
 from datetime import date
 
 from app.core.schemas.summary import DailySummaryOutput
+from app.core.services.activity_service import list_activities_for_date
 from app.core.services.meal_service import list_meals_for_date
 from app.core.services.profile_service import get_user_profile
 
 
 def get_daily_summary(target_date: date) -> DailySummaryOutput:
     meals = list_meals_for_date(target_date)
+    activities = list_activities_for_date(target_date)
     total_calories = sum(meal.total_calories for meal in meals)
     total_protein_g = sum(meal.total_protein_g for meal in meals)
     total_carbs_g = sum(meal.total_carbs_g for meal in meals)
     total_fat_g = sum(meal.total_fat_g for meal in meals)
+    activity_calories = sum(activity.calories_burned for activity in activities)
+    net_calories = total_calories - activity_calories
     estimated_item_count = sum(meal.estimated_item_count for meal in meals)
 
     profile = get_user_profile()
@@ -30,10 +34,13 @@ def get_daily_summary(target_date: date) -> DailySummaryOutput:
         total_protein_g=total_protein_g,
         total_carbs_g=total_carbs_g,
         total_fat_g=total_fat_g,
+        activity_calories=activity_calories,
+        net_calories=net_calories,
         target_calories=target_calories,
         remaining_calories=remaining_calories,
         target_protein_g=target_protein_g,
         meal_count=len(meals),
+        activity_count=len(activities),
         estimated_item_count=estimated_item_count,
         meals=meals,
     )

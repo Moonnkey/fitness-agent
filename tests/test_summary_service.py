@@ -1,8 +1,10 @@
 from datetime import date
 
 from app.core.db.session import init_db
+from app.core.schemas.activity import ActivityEntryInput
 from app.core.schemas.meal import MealItemInput, RecordMealInput
 from app.core.schemas.profile import UserProfileInput
+from app.core.services.activity_service import record_activity
 from app.core.services.meal_service import record_meal
 from app.core.services.profile_service import update_user_profile
 from app.core.services.summary_service import get_daily_summary
@@ -63,3 +65,28 @@ def test_daily_summary_totals_meals_and_targets() -> None:
     assert summary.meal_count == 1
     assert summary.estimated_item_count == 1
     assert summary.meals[0].total_calories == 404
+
+
+def test_daily_summary_includes_activity_and_net_calories() -> None:
+    init_db()
+    record_meal(
+        RecordMealInput(
+            date=date(2026, 7, 11),
+            meal_type="breakfast",
+            items=[MealItemInput(name="egg", calories=144, protein_g=12)],
+        )
+    )
+    record_activity(
+        ActivityEntryInput(
+            date=date(2026, 7, 11),
+            activity_type="walking",
+            calories_burned=80,
+            is_estimated=True,
+        )
+    )
+
+    summary = get_daily_summary(date(2026, 7, 11))
+
+    assert summary.activity_calories == 80
+    assert summary.net_calories == 64
+    assert summary.activity_count == 1
