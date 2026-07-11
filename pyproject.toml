@@ -21,6 +21,7 @@ mcp = [
 
 [project.scripts]
 fitness-agent = "app.cli.main:app"
+fitness-agent-mcp = "app.mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]
