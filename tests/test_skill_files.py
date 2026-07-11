@@ -8,6 +8,8 @@ def test_skill_file_exists_with_required_frontmatter() -> None:
     assert "name: fitness-agent" in text
     assert "description:" in text
     assert "record_meal" in text
+    assert "record_weight" in text
+    assert "record_activity" in text
     assert "get_daily_summary" in text
 
 
@@ -16,4 +18,7 @@ def test_tool_contracts_reference_exists() -> None:
 
     assert "update_user_profile" in text
     assert "record_meal" in text
+    assert "record_weight" in text
+    assert "get_weight_trend" in text
+    assert "record_activity" in text
     assert "get_daily_summary" in text

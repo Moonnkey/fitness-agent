@@ -14,6 +14,9 @@ async def test_mcp_server_lists_expected_tools() -> None:
         "get_user_profile",
         "record_meal",
         "get_daily_summary",
+        "record_weight",
+        "get_weight_trend",
+        "record_activity",
     }
 
 
@@ -81,6 +84,50 @@ async def test_get_user_profile_returns_none_when_missing() -> None:
     result = await server.call_tool("get_user_profile", {})
 
     assert _payload(result) == {"profile": None}
+
+
+@pytest.mark.anyio
+async def test_mcp_tools_record_weight_activity_and_summary() -> None:
+    server = build_mcp_server()
+
+    weight_result = await server.call_tool(
+        "record_weight",
+        {
+            "weight": {
+                "date": "2026-07-11",
+                "weight_kg": 79.6,
+                "raw_text": "今天早上空腹 79.6kg",
+                "metadata": {"timing": "morning fasting"},
+            }
+        },
+    )
+    trend_result = await server.call_tool("get_weight_trend", {"days": 7})
+    activity_result = await server.call_tool(
+        "record_activity",
+        {
+            "activity": {
+                "date": "2026-07-11",
+                "activity_type": "walking",
+                "duration_minutes": 40,
+                "calories_burned": 180,
+                "is_estimated": True,
+                "raw_text": "今天快走 40 分钟",
+                "metadata": {"estimation_basis": "中等强度快走估算"},
+            }
+        },
+    )
+    summary_result = await server.call_tool("get_daily_summary", {"date_value": "2026-07-11"})
+
+    weight_payload = _payload(weight_result)
+    trend_payload = _payload(trend_result)
+    activity_payload = _payload(activity_result)
+    summary_payload = _payload(summary_result)
+
+    assert weight_payload["weight_kg"] == 79.6
+    assert trend_payload["latest_weight_kg"] == 79.6
+    assert activity_payload["calories_burned"] == 180
+    assert summary_payload["activity_calories"] == 180
+    assert summary_payload["net_calories"] == -180
 
 
 def _payload(result: object) -> object:

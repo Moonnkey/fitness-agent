@@ -1,6 +1,6 @@
 ---
 name: fitness-agent
-description: Use when the user wants to record meals, update fitness or fat-loss profile data, or ask for daily calorie and macro summaries through the local Fitness Agent MCP tools. This skill guides agents to call update_user_profile, get_user_profile, record_meal, and get_daily_summary with structured or semi-structured payloads while preserving raw user text and uncertainty metadata.
+description: Use when the user wants to record meals, body weight, activity, update fitness or fat-loss profile data, or ask for daily calorie and macro summaries through the local Fitness Agent MCP tools. This skill guides agents to call update_user_profile, get_user_profile, record_meal, record_weight, get_weight_trend, record_activity, and get_daily_summary with structured or semi-structured payloads while preserving raw user text and uncertainty metadata.
 ---
 
 # Fitness Agent
@@ -9,13 +9,16 @@ Use the local Fitness Agent MCP tools as the source of truth for profile, meal, 
 
 ## Workflow
 
-1. Identify whether the user is updating their profile, recording a meal, or asking for a summary.
+1. Identify whether the user is updating their profile, recording a meal, recording body weight, recording activity, or asking for a summary.
 2. For profile changes, call `update_user_profile`.
 3. For meal records, parse the user's description into structured meal items before calling `record_meal`.
-4. Preserve the original user wording in `raw_text`.
-5. Put estimation assumptions, confidence, cooking method, brand, or missing context in `metadata`.
-6. For daily totals or remaining calories, call `get_daily_summary`.
-7. Mark calories and macros as estimates unless the source is user-provided or database-derived.
+4. For body weight observations, call `record_weight`; do not infer trends from a single weigh-in.
+5. For simple exercise or activity calorie records, call `record_activity`.
+6. Preserve the original user wording in `raw_text`.
+7. Put estimation assumptions, confidence, cooking method, brand, activity intensity, or missing context in `metadata`.
+8. For recent body-weight questions, call `get_weight_trend`.
+9. For daily totals or remaining calories, call `get_daily_summary`.
+10. Mark calories, macros, and activity burn as estimates unless the source is user-provided or database-derived.
 
 ## Tool Contracts
 

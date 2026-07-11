@@ -77,6 +77,59 @@ Input:
 
 The backend does not parse natural language. The agent should parse or estimate fields before calling `record_meal`.
 
+## record_weight
+
+Input:
+
+```json
+{
+  "weight": {
+    "date": "today",
+    "weight_kg": 79.6,
+    "raw_text": "今天早上空腹 79.6kg",
+    "metadata": {
+      "timing": "morning fasting"
+    }
+  }
+}
+```
+
+Use this for body-weight observations. Do not treat one entry as a trend.
+
+## get_weight_trend
+
+Input:
+
+```json
+{
+  "days": 7
+}
+```
+
+Returns latest weight, latest date, simple average weight, entry count, and included entries.
+
+## record_activity
+
+Input:
+
+```json
+{
+  "activity": {
+    "date": "today",
+    "activity_type": "walking",
+    "duration_minutes": 40,
+    "calories_burned": 180,
+    "is_estimated": true,
+    "raw_text": "今天快走 40 分钟",
+    "metadata": {
+      "estimation_basis": "中等强度快走估算"
+    }
+  }
+}
+```
+
+Use this for simple activity or workout calorie expenditure. It does not model exercise sets, muscle groups, recovery, or training-plan quality.
+
 ## get_daily_summary
 
 Input:
