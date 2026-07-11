@@ -69,6 +69,44 @@ def test_meal_add_json_and_summary_today() -> None:
     assert "estimated items" in summary_result.output.lower()
 
 
+def test_weight_activity_and_summary_commands() -> None:
+    init_db()
+    runner = CliRunner()
+    weight_payload = {
+        "date": "today",
+        "weight_kg": 79.6,
+        "raw_text": "今天早上空腹 79.6kg",
+        "metadata": {"timing": "morning fasting"},
+    }
+    activity_payload = {
+        "date": "today",
+        "activity_type": "walking",
+        "duration_minutes": 40,
+        "calories_burned": 180,
+        "is_estimated": True,
+        "raw_text": "今天快走 40 分钟",
+        "metadata": {"estimation_basis": "中等强度快走估算"},
+    }
+
+    weight_result = runner.invoke(app, ["weight", "add", "--json", json.dumps(weight_payload)])
+    trend_result = runner.invoke(app, ["weight", "trend", "--days", "7"])
+    activity_result = runner.invoke(
+        app,
+        ["activity", "add", "--json", json.dumps(activity_payload)],
+    )
+    summary_result = runner.invoke(app, ["summary", "today"])
+
+    assert weight_result.exit_code == 0
+    assert "79.6" in weight_result.output
+    assert trend_result.exit_code == 0
+    assert "latest weight" in trend_result.output.lower()
+    assert activity_result.exit_code == 0
+    assert "180" in activity_result.output
+    assert summary_result.exit_code == 0
+    assert "activity calories" in summary_result.output.lower()
+    assert "net calories" in summary_result.output.lower()
+
+
 def test_dev_reset_db_requires_yes() -> None:
     runner = CliRunner()
 

@@ -6,22 +6,30 @@ from typing import Annotated, Any
 import typer
 
 from app.core.db.session import get_database_path, init_db, reset_engine_cache
+from app.core.schemas.activity import ActivityEntryInput
 from app.core.schemas.common import parse_date_value
 from app.core.schemas.meal import MealItemInput, RecordMealInput
 from app.core.schemas.profile import UserProfileInput
+from app.core.schemas.weight import WeightEntryInput
+from app.core.services.activity_service import record_activity
 from app.core.services.meal_service import record_meal
 from app.core.services.profile_service import get_user_profile, update_user_profile
 from app.core.services.summary_service import get_daily_summary
+from app.core.services.weight_service import get_weight_trend, record_weight
 
 app = typer.Typer(help="Local-first fitness and fat-loss assistant.")
 profile_app = typer.Typer(help="Manage the local user profile.")
 meal_app = typer.Typer(help="Record meals.")
 summary_app = typer.Typer(help="Show daily summaries.")
+weight_app = typer.Typer(help="Record body weight.")
+activity_app = typer.Typer(help="Record activity calories.")
 dev_app = typer.Typer(help="Development utilities.")
 
 app.add_typer(profile_app, name="profile")
 app.add_typer(meal_app, name="meal")
 app.add_typer(summary_app, name="summary")
+app.add_typer(weight_app, name="weight")
+app.add_typer(activity_app, name="activity")
 app.add_typer(dev_app, name="dev")
 
 
@@ -140,6 +148,8 @@ def _print_summary(target_date: date) -> None:
     typer.echo(f"Protein g: {summary.total_protein_g}")
     typer.echo(f"Carbs g: {summary.total_carbs_g}")
     typer.echo(f"Fat g: {summary.total_fat_g}")
+    typer.echo(f"Activity calories: {summary.activity_calories}")
+    typer.echo(f"Net calories: {summary.net_calories}")
     typer.echo(f"Target calories: {summary.target_calories}")
     typer.echo(f"Remaining calories: {summary.remaining_calories}")
     typer.echo(f"Target protein g: {summary.target_protein_g}")
@@ -157,6 +167,44 @@ def summary_today() -> None:
 @summary_app.command("date")
 def summary_date(date_value: str) -> None:
     _print_summary(parse_date_value(date_value))
+
+
+def _weight_input_from_json(payload: str) -> WeightEntryInput:
+    data: dict[str, Any] = json.loads(payload)
+    data["date"] = parse_date_value(data.get("date"))
+    return WeightEntryInput.model_validate(data)
+
+
+@weight_app.command("add")
+def weight_add(json_payload: Annotated[str, typer.Option("--json")]) -> None:
+    init_db()
+    entry = record_weight(_weight_input_from_json(json_payload))
+    typer.echo(f"Weight recorded: id={entry.id}, weight_kg={entry.weight_kg}")
+
+
+@weight_app.command("trend")
+def weight_trend(days: Annotated[int, typer.Option("--days")] = 7) -> None:
+    init_db()
+    trend = get_weight_trend(days=days)
+    typer.echo(f"Latest weight: {trend.latest_weight_kg}")
+    typer.echo(f"Latest date: {trend.latest_date}")
+    typer.echo(f"Average weight kg: {trend.average_weight_kg}")
+    typer.echo(f"Entry count: {trend.entry_count}")
+
+
+def _activity_input_from_json(payload: str) -> ActivityEntryInput:
+    data: dict[str, Any] = json.loads(payload)
+    data["date"] = parse_date_value(data.get("date"))
+    return ActivityEntryInput.model_validate(data)
+
+
+@activity_app.command("add")
+def activity_add(json_payload: Annotated[str, typer.Option("--json")]) -> None:
+    init_db()
+    entry = record_activity(_activity_input_from_json(json_payload))
+    typer.echo(f"Activity recorded: id={entry.id}, type={entry.activity_type}")
+    typer.echo(f"Calories burned: {entry.calories_burned}")
+    typer.echo(f"Estimated: {entry.is_estimated}")
 
 
 @dev_app.command("reset-db")
