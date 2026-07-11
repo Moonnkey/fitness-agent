@@ -76,6 +76,37 @@ Input:
 ```
 
 The backend does not parse natural language. The agent should parse or estimate fields before calling `record_meal`.
+The response may include `duplicate_warnings`; if present and the user did not explicitly request another copy, ask for confirmation before saving more duplicate records.
+
+## check_duplicate_meal
+
+Input uses the same `meal` payload as `record_meal`:
+
+```json
+{
+  "meal": {
+    "date": "today",
+    "meal_type": "breakfast",
+    "raw_text": "早餐吃了两个鸡蛋",
+    "items": [
+      {
+        "name": "鸡蛋",
+        "quantity": 2,
+        "unit": "个",
+        "calories": 144
+      }
+    ]
+  }
+}
+```
+
+Returns:
+
+```json
+{
+  "duplicates": []
+}
+```
 
 ## record_weight
 
@@ -95,6 +126,11 @@ Input:
 ```
 
 Use this for body-weight observations. Do not treat one entry as a trend.
+The response may include `duplicate_warnings`.
+
+## check_duplicate_weight
+
+Input uses the same `weight` payload as `record_weight`.
 
 ## get_weight_trend
 
@@ -129,6 +165,11 @@ Input:
 ```
 
 Use this for simple activity or workout calorie expenditure. It does not model exercise sets, muscle groups, recovery, or training-plan quality.
+The response may include `duplicate_warnings`.
+
+## check_duplicate_activity
+
+Input uses the same `activity` payload as `record_activity`.
 
 ## get_daily_summary
 
@@ -141,3 +182,44 @@ Input:
 ```
 
 Use ISO dates such as `2026-07-11` when the user asks for a specific date.
+
+## get_records_for_date
+
+Input:
+
+```json
+{
+  "date_value": "today",
+  "record_type": "all"
+}
+```
+
+Allowed `record_type` values:
+
+- `all`
+- `meal`
+- `meal_item`
+- `weight`
+- `activity`
+
+Use this before deletion when the user refers to a record indirectly, such as "delete the breakfast I just added".
+
+## delete_record
+
+Input:
+
+```json
+{
+  "record_type": "meal",
+  "record_id": 1
+}
+```
+
+Allowed `record_type` values:
+
+- `meal`
+- `meal_item`
+- `weight`
+- `activity`
+
+This is a hard delete. Confirm intent when the user has not clearly requested deletion.

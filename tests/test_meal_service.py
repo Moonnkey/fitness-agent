@@ -2,7 +2,7 @@ from datetime import date
 
 from app.core.db.session import init_db
 from app.core.schemas.meal import MealItemInput, RecordMealInput
-from app.core.services.meal_service import list_meals_for_date, record_meal
+from app.core.services.meal_service import find_duplicate_meals, list_meals_for_date, record_meal
 
 
 def test_record_meal_preserves_items_raw_text_and_metadata() -> None:
@@ -61,3 +61,28 @@ def test_list_meals_for_date_filters_by_date() -> None:
 
     assert len(meals) == 1
     assert meals[0].meal_type == "breakfast"
+
+
+def test_find_duplicate_meals_matches_same_raw_text() -> None:
+    init_db()
+    record_meal(
+        RecordMealInput(
+            date=date(2026, 7, 11),
+            meal_type="breakfast",
+            raw_text="早餐吃了两个鸡蛋",
+            items=[MealItemInput(name="鸡蛋", quantity=2, unit="个", calories=144)],
+        )
+    )
+
+    duplicates = find_duplicate_meals(
+        RecordMealInput(
+            date=date(2026, 7, 11),
+            meal_type="breakfast",
+            raw_text="早餐吃了两个鸡蛋",
+            items=[MealItemInput(name="鸡蛋", quantity=2, unit="个", calories=144)],
+        )
+    )
+
+    assert len(duplicates) == 1
+    assert duplicates[0].reason == "same_raw_text"
+    assert duplicates[0].record.raw_text == "早餐吃了两个鸡蛋"

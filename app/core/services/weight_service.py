@@ -4,7 +4,12 @@ from sqlalchemy import select
 
 from app.core.db.session import session_scope
 from app.core.models.weight import WeightEntry
-from app.core.schemas.weight import WeightEntryInput, WeightEntryOutput, WeightTrendOutput
+from app.core.schemas.weight import (
+    WeightDuplicateWarning,
+    WeightEntryInput,
+    WeightEntryOutput,
+    WeightTrendOutput,
+)
 
 
 def _to_output(entry: WeightEntry) -> WeightEntryOutput:
@@ -19,6 +24,7 @@ def _to_output(entry: WeightEntry) -> WeightEntryOutput:
 
 
 def record_weight(input_data: WeightEntryInput) -> WeightEntryOutput:
+    duplicate_warnings = find_duplicate_weights(input_data)
     with session_scope() as session:
         entry = WeightEntry(
             date=input_data.date,
@@ -29,7 +35,11 @@ def record_weight(input_data: WeightEntryInput) -> WeightEntryOutput:
         )
         session.add(entry)
         session.flush()
-        return _to_output(entry)
+        output = _to_output(entry)
+        output.duplicate_warnings = [
+            warning.model_dump(mode="json") for warning in duplicate_warnings
+        ]
+        return output
 
 
 def get_weight_trend(days: int = 7) -> WeightTrendOutput:
@@ -72,3 +82,57 @@ def get_weight_trend(days: int = 7) -> WeightTrendOutput:
             entry_count=len(outputs),
             entries=outputs,
         )
+
+
+def list_weights_for_date(target_date) -> list[WeightEntryOutput]:
+    with session_scope() as session:
+        entries = (
+            session.execute(
+                select(WeightEntry)
+                .where(WeightEntry.date == target_date)
+                .order_by(WeightEntry.id)
+            )
+            .scalars()
+            .all()
+        )
+        return [_to_output(entry) for entry in entries]
+
+
+def find_duplicate_weights(input_data: WeightEntryInput) -> list[WeightDuplicateWarning]:
+    with session_scope() as session:
+        entries = (
+            session.execute(
+                select(WeightEntry)
+                .where(WeightEntry.date == input_data.date)
+                .order_by(WeightEntry.id)
+            )
+            .scalars()
+            .all()
+        )
+
+        warnings: list[WeightDuplicateWarning] = []
+        for entry in entries:
+            output = _to_output(entry)
+            reason = _weight_duplicate_reason(input_data, output)
+            if reason is None:
+                continue
+            warnings.append(
+                WeightDuplicateWarning(
+                    record_id=output.id,
+                    reason=reason,
+                    message="Possible duplicate weight entry on the same date.",
+                    record=output,
+                )
+            )
+        return warnings
+
+
+def _weight_duplicate_reason(
+    input_data: WeightEntryInput,
+    existing: WeightEntryOutput,
+) -> str | None:
+    if input_data.raw_text and existing.raw_text and input_data.raw_text == existing.raw_text:
+        return "same_raw_text"
+    if abs(input_data.weight_kg - existing.weight_kg) <= 0.05:
+        return "same_weight"
+    return None

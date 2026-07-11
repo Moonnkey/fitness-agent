@@ -9,6 +9,8 @@ Fitness Agent 现在是一个本地优先的减脂健身记录工具。它已经
 - 体重记录：单次体重、最近体重、简单 7 日均重。
 - 活动记录：活动类型、时长、估算消耗。
 - 每日总结：摄入热量、活动消耗、净热量、蛋白质、目标热量、剩余热量。
+- 历史管理：按日期查询记录、按类型筛选、按 id 硬删除误记记录。
+- 重复提醒：记录饮食、体重或活动时返回疑似重复记录，方便 Agent 追问确认。
 
 它还不是完整 AI 教练。当前版本不做：
 
@@ -63,6 +65,7 @@ meal
 summary
 weight
 activity
+records
 dev
 ```
 
@@ -220,6 +223,33 @@ summary 当前包含：
 - 餐次数量。
 - 估算条目数量。
 
+### 7. 查询和删除历史记录
+
+查询今天所有记录：
+
+```bash
+uv run fitness-agent records list --date today
+```
+
+只查某一类记录：
+
+```bash
+uv run fitness-agent records list --date today --type meal
+uv run fitness-agent records list --date today --type weight
+uv run fitness-agent records list --date today --type activity
+```
+
+删除误记记录：
+
+```bash
+uv run fitness-agent records delete meal 1
+uv run fitness-agent records delete meal_item 1
+uv run fitness-agent records delete weight 1
+uv run fitness-agent records delete activity 1
+```
+
+删除是硬删除，不会保留回收站或审计记录。删除前建议先用 `records list` 找到正确 id。
+
 ## MCP 使用
 
 项目已经提供本地 MCP server：
@@ -252,6 +282,11 @@ codex mcp get fitness-agent
 - `get_weight_trend`
 - `record_activity`
 - `get_daily_summary`
+- `get_records_for_date`
+- `delete_record`
+- `check_duplicate_meal`
+- `check_duplicate_weight`
+- `check_duplicate_activity`
 
 ## 给 Agent 的提示词示例
 
@@ -294,12 +329,40 @@ codex mcp get fitness-agent
 4. 调用 get_daily_summary 输出今天 summary。
 ```
 
+### 查询历史记录
+
+```text
+使用 fitness-agent MCP 工具查询我今天记录过什么。请调用 get_records_for_date，record_type 使用 all，然后按饮食、体重、活动分组告诉我。
+```
+
+```text
+使用 fitness-agent MCP 工具查询今天的饮食记录。请调用 get_records_for_date，record_type 使用 meal，告诉我每条 meal id、餐次和总热量。
+```
+
+### 删除误记记录
+
+```text
+我刚才早餐记录错了。请先调用 get_records_for_date 查询今天的 meal 记录，找到最可能是刚才那条的记录后告诉我 id 和内容，等我确认后再调用 delete_record 删除。
+```
+
+如果你已经知道要删除的 id：
+
+```text
+使用 fitness-agent MCP 工具删除 meal id=3，这是我刚才重复记录的一顿早餐。请调用 delete_record，然后再调用 get_records_for_date 确认今天记录里已经没有这条。
+```
+
+### 处理重复提醒
+
+```text
+使用 fitness-agent MCP 工具记录早餐：今天早餐吃了两个鸡蛋。请先估算营养并调用 check_duplicate_meal 检查是否疑似重复；如果发现重复，先告诉我疑似重复记录并问我要不要继续保存；如果没有重复，再调用 record_meal 保存。
+```
+
 ## 当前限制和注意事项
 
 - 后端不解析自然语言。自然语言解析和估算由 Agent 完成，然后传结构化数据给工具。
 - 热量、宏量营养素和活动消耗大多是估算值，除非用户明确提供或后续接入可靠数据源。
-- 当前没有去重逻辑。如果同一顿饭重复调用 `record_meal`，会重复记录。
-- 当前没有编辑/删除单条记录的命令。如果录错，开发阶段可以用 `dev reset-db --yes` 重置全部数据。
+- 当前有重复提醒，但不会自动拦截保存。Agent 应根据 `duplicate_warnings` 或 `check_duplicate_*` 结果向用户确认。
+- 当前支持按 id 硬删除记录，但还不支持编辑记录。录错时可以删除后重新记录。
 - 当前 summary 的 `remaining_calories` 是目标热量减摄入热量；`net_calories` 是摄入热量减活动消耗。
 - 当前体重趋势只是简单均值，不代表医学判断。
 
@@ -314,6 +377,7 @@ codex mcp get fitness-agent
 4. 每次称重调用 record_weight。
 5. 每次运动调用 record_activity。
 6. 每天任意时间调用 get_daily_summary 查看当天状态。
+7. 如果怀疑重复或误记，让 Agent 调用 get_records_for_date 和 delete_record 处理。
 ```
 
 开发调试时，推荐流程是：

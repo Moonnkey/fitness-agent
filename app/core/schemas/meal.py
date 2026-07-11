@@ -53,3 +53,12 @@ class MealOutput(BaseModel):
     total_carbs_g: float
     total_fat_g: float
     estimated_item_count: int
+    duplicate_warnings: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class MealDuplicateWarning(BaseModel):
+    record_type: Literal["meal"] = "meal"
+    record_id: int
+    reason: str
+    message: str
+    record: MealOutput

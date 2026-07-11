@@ -94,8 +94,17 @@ MCP 应该等 CLI 和 core services 跑通后再加。
 - `profile_service.py`
 - `meal_service.py`
 - `summary_service.py`
-- 后续：`weight_service.py`
-- 后续：`activity_service.py`
+- `weight_service.py`
+- `activity_service.py`
+- `record_service.py`
+
+`record_service.py` 负责跨类型的历史查询和硬删除。类型相关的重复判断保留在对应记录服务附近：
+
+- `meal_service.py` 判断疑似重复饮食记录。
+- `weight_service.py` 判断疑似重复体重记录。
+- `activity_service.py` 判断疑似重复活动记录。
+
+重复判断只做提醒，不会静默阻止保存。Agent 看到疑似重复但用户意图不明确时，应该先向用户确认。
 
 ### 持久化层
 

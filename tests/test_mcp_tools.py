@@ -17,6 +17,11 @@ async def test_mcp_server_lists_expected_tools() -> None:
         "record_weight",
         "get_weight_trend",
         "record_activity",
+        "get_records_for_date",
+        "delete_record",
+        "check_duplicate_meal",
+        "check_duplicate_weight",
+        "check_duplicate_activity",
     }
 
 
@@ -128,6 +133,43 @@ async def test_mcp_tools_record_weight_activity_and_summary() -> None:
     assert activity_payload["calories_burned"] == 180
     assert summary_payload["activity_calories"] == 180
     assert summary_payload["net_calories"] == -180
+
+
+@pytest.mark.anyio
+async def test_mcp_tools_history_delete_and_duplicate_check() -> None:
+    server = build_mcp_server()
+
+    meal = {
+        "date": "2026-07-11",
+        "meal_type": "breakfast",
+        "raw_text": "早餐两个鸡蛋",
+        "items": [{"name": "鸡蛋", "quantity": 2, "unit": "个", "calories": 144}],
+    }
+    recorded_result = await server.call_tool("record_meal", {"meal": meal})
+    duplicate_result = await server.call_tool("check_duplicate_meal", {"meal": meal})
+    history_result = await server.call_tool(
+        "get_records_for_date",
+        {"date_value": "2026-07-11", "record_type": "all"},
+    )
+    delete_result = await server.call_tool(
+        "delete_record",
+        {"record_type": "meal", "record_id": _payload(recorded_result)["id"]},
+    )
+    history_after_delete = await server.call_tool(
+        "get_records_for_date",
+        {"date_value": "2026-07-11", "record_type": "all"},
+    )
+
+    duplicate_payload = _payload(duplicate_result)
+    history_payload = _payload(history_result)
+    delete_payload = _payload(delete_result)
+    history_after_delete_payload = _payload(history_after_delete)
+
+    assert len(duplicate_payload["duplicates"]) == 1
+    assert duplicate_payload["duplicates"][0]["reason"] == "same_raw_text"
+    assert history_payload["total_record_count"] == 1
+    assert delete_payload == {"record_type": "meal", "record_id": 1, "deleted": True}
+    assert history_after_delete_payload["total_record_count"] == 0
 
 
 def _payload(result: object) -> object:

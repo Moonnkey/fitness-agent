@@ -59,7 +59,7 @@ The initial target user is a single local user who wants help tracking fat-loss 
 ### CLI
 
 - Provide a Python CLI for local usage and testing.
-- Initial commands should cover profile setup, meal recording, weight recording, activity recording, and daily summary.
+- Initial commands should cover profile setup, meal recording, weight recording, activity recording, history lookup, deletion, and daily summary.
 
 ### MCP Tools
 
@@ -71,6 +71,11 @@ The initial target user is a single local user who wants help tracking fat-loss 
   - `get_daily_summary`
   - `get_user_profile`
   - `update_user_profile`
+  - `get_records_for_date`
+  - `delete_record`
+  - `check_duplicate_meal`
+  - `check_duplicate_weight`
+  - `check_duplicate_activity`
 
 ### Skill
 
@@ -128,6 +133,18 @@ The third milestone is complete when:
 3. Record one activity entry through CLI and MCP.
 4. Daily summary includes activity calories and net calories.
 5. Skill tool contracts document weight and activity tools.
+```
+
+## Suggested Fourth Milestone
+
+The fourth milestone is complete when:
+
+```text
+1. Query meals, weight entries, and activities for a date through CLI and MCP.
+2. Filter history by record type when the user asks for one category.
+3. Hard-delete meals, meal items, weight entries, and activity entries by id.
+4. Return duplicate warnings for meals, weight entries, and activities.
+5. Skill and user guide explain how agents should confirm before saving likely duplicates.
 ```
 
 ## Data Quality Principles

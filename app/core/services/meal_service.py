@@ -5,7 +5,12 @@ from sqlalchemy.orm import selectinload
 
 from app.core.db.session import session_scope
 from app.core.models.meal import Meal, MealItem
-from app.core.schemas.meal import MealItemOutput, MealOutput, RecordMealInput
+from app.core.schemas.meal import (
+    MealDuplicateWarning,
+    MealItemOutput,
+    MealOutput,
+    RecordMealInput,
+)
 
 
 def _to_output(meal: Meal) -> MealOutput:
@@ -45,6 +50,7 @@ def _to_output(meal: Meal) -> MealOutput:
 
 
 def record_meal(input_data: RecordMealInput) -> MealOutput:
+    duplicate_warnings = find_duplicate_meals(input_data)
     with session_scope() as session:
         meal = Meal(
             date=input_data.date,
@@ -73,7 +79,11 @@ def record_meal(input_data: RecordMealInput) -> MealOutput:
         ]
         session.add(meal)
         session.flush()
-        return _to_output(meal)
+        output = _to_output(meal)
+        output.duplicate_warnings = [
+            warning.model_dump(mode="json") for warning in duplicate_warnings
+        ]
+        return output
 
 
 def list_meals_for_date(target_date: date) -> list[MealOutput]:
@@ -89,3 +99,51 @@ def list_meals_for_date(target_date: date) -> list[MealOutput]:
             .all()
         )
         return [_to_output(meal) for meal in meals]
+
+
+def find_duplicate_meals(input_data: RecordMealInput) -> list[MealDuplicateWarning]:
+    with session_scope() as session:
+        existing_meals = (
+            session.execute(
+                select(Meal)
+                .where(Meal.date == input_data.date)
+                .where(Meal.meal_type == input_data.meal_type)
+                .options(selectinload(Meal.items))
+                .order_by(Meal.id)
+            )
+            .scalars()
+            .all()
+        )
+
+        warnings: list[MealDuplicateWarning] = []
+        for meal in existing_meals:
+            output = _to_output(meal)
+            reason = _meal_duplicate_reason(input_data, output)
+            if reason is None:
+                continue
+            warnings.append(
+                MealDuplicateWarning(
+                    record_id=output.id,
+                    reason=reason,
+                    message="Possible duplicate meal on the same date and meal type.",
+                    record=output,
+                )
+            )
+        return warnings
+
+
+def _meal_duplicate_reason(input_data: RecordMealInput, existing: MealOutput) -> str | None:
+    if input_data.raw_text and existing.raw_text and input_data.raw_text == existing.raw_text:
+        return "same_raw_text"
+
+    input_names = sorted(item.name.strip().lower() for item in input_data.items)
+    existing_names = sorted(item.name.strip().lower() for item in existing.items)
+    input_calories = sum(item.calories for item in input_data.items)
+    if (
+        input_names
+        and input_names == existing_names
+        and abs(input_calories - existing.total_calories) <= 1
+    ):
+        return "same_items_and_calories"
+
+    return None

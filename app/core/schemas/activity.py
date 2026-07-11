@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,3 +19,12 @@ class ActivityEntryOutput(ActivityEntryInput):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    duplicate_warnings: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ActivityDuplicateWarning(BaseModel):
+    record_type: Literal["activity"] = "activity"
+    record_id: int
+    reason: str
+    message: str
+    record: ActivityEntryOutput

@@ -92,8 +92,19 @@ Initial services:
 - `profile_service.py`
 - `meal_service.py`
 - `summary_service.py`
-- Later: `weight_service.py`
-- Later: `activity_service.py`
+- `weight_service.py`
+- `activity_service.py`
+- `record_service.py`
+
+`record_service.py` owns cross-record history lookup and hard deletion. Type-specific
+duplicate checks stay near the type-specific recording services:
+
+- `meal_service.py` checks likely duplicate meals.
+- `weight_service.py` checks likely duplicate weight entries.
+- `activity_service.py` checks likely duplicate activities.
+
+Duplicate checks are advisory. The backend returns warnings but does not silently
+block recording; the agent should ask the user when intent is unclear.
 
 ### Persistence Layer
 

@@ -8,19 +8,47 @@ from app.core.schemas.common import parse_date_value
 from app.core.schemas.meal import RecordMealInput
 from app.core.schemas.profile import UserProfileInput
 from app.core.schemas.weight import WeightEntryInput
-from app.core.services.activity_service import record_activity as record_activity_service
-from app.core.services.meal_service import record_meal as record_meal_service
-from app.core.services.profile_service import get_user_profile as get_user_profile_service
-from app.core.services.profile_service import update_user_profile as update_user_profile_service
+from app.core.services.activity_service import (
+    find_duplicate_activities as find_duplicate_activities_service,
+)
+from app.core.services.activity_service import (
+    record_activity as record_activity_service,
+)
+from app.core.services.meal_service import (
+    find_duplicate_meals as find_duplicate_meals_service,
+)
+from app.core.services.meal_service import (
+    record_meal as record_meal_service,
+)
+from app.core.services.profile_service import (
+    get_user_profile as get_user_profile_service,
+)
+from app.core.services.profile_service import (
+    update_user_profile as update_user_profile_service,
+)
+from app.core.services.record_service import (
+    delete_record as delete_record_service,
+)
+from app.core.services.record_service import (
+    get_records_for_date as get_records_for_date_service,
+)
 from app.core.services.summary_service import get_daily_summary as get_daily_summary_service
-from app.core.services.weight_service import get_weight_trend as get_weight_trend_service
-from app.core.services.weight_service import record_weight as record_weight_service
+from app.core.services.weight_service import (
+    find_duplicate_weights as find_duplicate_weights_service,
+)
+from app.core.services.weight_service import (
+    get_weight_trend as get_weight_trend_service,
+)
+from app.core.services.weight_service import (
+    record_weight as record_weight_service,
+)
 
 SERVER_INSTRUCTIONS = """
 Fitness Agent stores local fitness and fat-loss tracking data.
 Use update_user_profile before relying on calorie targets.
 Use record_meal only after the agent has parsed or estimated meal items into structured fields.
 Use record_weight for body-weight observations and record_activity for exercise calorie records.
+Use duplicate check tools or inspect duplicate_warnings before repeating similar records.
 Preserve user wording in raw_text and estimation assumptions in metadata.
 All calorie and macro values may be estimates unless source says otherwise.
 """
@@ -59,6 +87,15 @@ def build_mcp_server() -> FastMCP:
         return _dump_model(output)
 
     @mcp.tool()
+    def check_duplicate_meal(meal: dict[str, Any]) -> dict[str, Any]:
+        """Return possible duplicate meals before recording a new meal."""
+        init_db()
+        data = dict(meal)
+        data["date"] = parse_date_value(data.get("date"))
+        warnings = find_duplicate_meals_service(RecordMealInput.model_validate(data))
+        return {"duplicates": [_dump_model(warning) for warning in warnings]}
+
+    @mcp.tool()
     def record_weight(weight: dict[str, Any]) -> dict[str, Any]:
         """Record a body-weight observation."""
         init_db()
@@ -66,6 +103,15 @@ def build_mcp_server() -> FastMCP:
         data["date"] = parse_date_value(data.get("date"))
         output = record_weight_service(WeightEntryInput.model_validate(data))
         return _dump_model(output)
+
+    @mcp.tool()
+    def check_duplicate_weight(weight: dict[str, Any]) -> dict[str, Any]:
+        """Return possible duplicate body-weight entries before recording."""
+        init_db()
+        data = dict(weight)
+        data["date"] = parse_date_value(data.get("date"))
+        warnings = find_duplicate_weights_service(WeightEntryInput.model_validate(data))
+        return {"duplicates": [_dump_model(warning) for warning in warnings]}
 
     @mcp.tool()
     def get_weight_trend(days: int = 7) -> dict[str, Any]:
@@ -84,10 +130,33 @@ def build_mcp_server() -> FastMCP:
         return _dump_model(output)
 
     @mcp.tool()
+    def check_duplicate_activity(activity: dict[str, Any]) -> dict[str, Any]:
+        """Return possible duplicate activity entries before recording."""
+        init_db()
+        data = dict(activity)
+        data["date"] = parse_date_value(data.get("date"))
+        warnings = find_duplicate_activities_service(ActivityEntryInput.model_validate(data))
+        return {"duplicates": [_dump_model(warning) for warning in warnings]}
+
+    @mcp.tool()
     def get_daily_summary(date_value: str = "today") -> dict[str, Any]:
         """Return calorie and macro totals for a date."""
         init_db()
         output = get_daily_summary_service(parse_date_value(date_value))
+        return _dump_model(output)
+
+    @mcp.tool()
+    def get_records_for_date(date_value: str = "today", record_type: str = "all") -> dict[str, Any]:
+        """Return recorded meals, weights, and activities for a date."""
+        init_db()
+        output = get_records_for_date_service(parse_date_value(date_value), record_type=record_type)
+        return _dump_model(output)
+
+    @mcp.tool()
+    def delete_record(record_type: str, record_id: int) -> dict[str, Any]:
+        """Hard-delete a meal, meal item, weight entry, or activity entry by id."""
+        init_db()
+        output = delete_record_service(record_type=record_type, record_id=record_id)
         return _dump_model(output)
 
     return mcp

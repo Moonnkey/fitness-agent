@@ -107,6 +107,29 @@ def test_weight_activity_and_summary_commands() -> None:
     assert "net calories" in summary_result.output.lower()
 
 
+def test_records_list_and_delete_commands() -> None:
+    init_db()
+    runner = CliRunner()
+    payload = {
+        "date": "today",
+        "meal_type": "breakfast",
+        "items": [{"name": "鸡蛋", "calories": 144}],
+    }
+
+    meal_result = runner.invoke(app, ["meal", "add", "--json", json.dumps(payload)])
+    list_result = runner.invoke(app, ["records", "list", "--date", "today"])
+    delete_result = runner.invoke(app, ["records", "delete", "meal", "1"])
+    list_after_delete = runner.invoke(app, ["records", "list", "--date", "today"])
+
+    assert meal_result.exit_code == 0
+    assert list_result.exit_code == 0
+    assert "Meals: 1" in list_result.output
+    assert delete_result.exit_code == 0
+    assert "Deleted meal: id=1" in delete_result.output
+    assert list_after_delete.exit_code == 0
+    assert "Total records: 0" in list_after_delete.output
+
+
 def test_dev_reset_db_requires_yes() -> None:
     runner = CliRunner()
 

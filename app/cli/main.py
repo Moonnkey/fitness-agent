@@ -14,6 +14,7 @@ from app.core.schemas.weight import WeightEntryInput
 from app.core.services.activity_service import record_activity
 from app.core.services.meal_service import record_meal
 from app.core.services.profile_service import get_user_profile, update_user_profile
+from app.core.services.record_service import DeleteRecordError, delete_record, get_records_for_date
 from app.core.services.summary_service import get_daily_summary
 from app.core.services.weight_service import get_weight_trend, record_weight
 
@@ -23,6 +24,7 @@ meal_app = typer.Typer(help="Record meals.")
 summary_app = typer.Typer(help="Show daily summaries.")
 weight_app = typer.Typer(help="Record body weight.")
 activity_app = typer.Typer(help="Record activity calories.")
+records_app = typer.Typer(help="List and delete recorded data.")
 dev_app = typer.Typer(help="Development utilities.")
 
 app.add_typer(profile_app, name="profile")
@@ -30,6 +32,7 @@ app.add_typer(meal_app, name="meal")
 app.add_typer(summary_app, name="summary")
 app.add_typer(weight_app, name="weight")
 app.add_typer(activity_app, name="activity")
+app.add_typer(records_app, name="records")
 app.add_typer(dev_app, name="dev")
 
 
@@ -205,6 +208,40 @@ def activity_add(json_payload: Annotated[str, typer.Option("--json")]) -> None:
     typer.echo(f"Activity recorded: id={entry.id}, type={entry.activity_type}")
     typer.echo(f"Calories burned: {entry.calories_burned}")
     typer.echo(f"Estimated: {entry.is_estimated}")
+
+
+@records_app.command("list")
+def records_list(
+    date_value: Annotated[str, typer.Option("--date")] = "today",
+    record_type: Annotated[str, typer.Option("--type")] = "all",
+) -> None:
+    init_db()
+    records = get_records_for_date(parse_date_value(date_value), record_type=record_type)
+    typer.echo(f"Date: {records.date.isoformat()}")
+    typer.echo(f"Type: {records.record_type}")
+    typer.echo(f"Total records: {records.total_record_count}")
+    typer.echo(f"Meals: {len(records.meals)}")
+    for meal in records.meals:
+        typer.echo(f"- meal id={meal.id}, type={meal.meal_type}, calories={meal.total_calories}")
+    typer.echo(f"Weights: {len(records.weights)}")
+    for weight in records.weights:
+        typer.echo(f"- weight id={weight.id}, weight_kg={weight.weight_kg}")
+    typer.echo(f"Activities: {len(records.activities)}")
+    for activity in records.activities:
+        typer.echo(
+            f"- activity id={activity.id}, type={activity.activity_type}, "
+            f"calories={activity.calories_burned}"
+        )
+
+
+@records_app.command("delete")
+def records_delete(record_type: str, record_id: int) -> None:
+    init_db()
+    try:
+        output = delete_record(record_type=record_type, record_id=record_id)
+    except DeleteRecordError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(f"Deleted {output.record_type}: id={output.record_id}")
 
 
 @dev_app.command("reset-db")
