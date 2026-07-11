@@ -16,6 +16,7 @@ venv/
 env/
 
 # Local data and secrets
+data/
 *.sqlite
 *.sqlite3
 *.db
@@ -32,4 +33,3 @@ dist/
 .DS_Store
 .idea/
 .vscode/
-
