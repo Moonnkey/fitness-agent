@@ -20,6 +20,7 @@ def _to_output(entry: WeightEntry) -> WeightEntryOutput:
         raw_text=entry.raw_text,
         metadata=entry.metadata_json,
         note=entry.note,
+        updated_at=entry.updated_at,
     )
 
 

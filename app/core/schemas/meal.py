@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -36,6 +36,7 @@ class MealItemOutput(MealItemInput):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    updated_at: datetime | None = None
 
 
 class MealOutput(BaseModel):
@@ -47,6 +48,7 @@ class MealOutput(BaseModel):
     raw_text: str | None = None
     metadata: dict[str, Any] | None = None
     note: str | None = None
+    updated_at: datetime | None = None
     items: list[MealItemOutput]
     total_calories: float
     total_protein_g: float

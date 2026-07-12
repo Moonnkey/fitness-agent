@@ -96,8 +96,9 @@ Initial services:
 - `activity_service.py`
 - `record_service.py`
 
-`record_service.py` owns cross-record history lookup and hard deletion. Type-specific
-duplicate checks stay near the type-specific recording services:
+`record_service.py` owns cross-record history lookup, single-record detail lookup,
+partial updates, and hard deletion. Type-specific duplicate checks stay near the
+type-specific recording services:
 
 - `meal_service.py` checks likely duplicate meals.
 - `weight_service.py` checks likely duplicate weight entries.
@@ -105,6 +106,14 @@ duplicate checks stay near the type-specific recording services:
 
 Duplicate checks are advisory. The backend returns warnings but does not silently
 block recording; the agent should ask the user when intent is unclear.
+
+Update behavior:
+
+- `get_record(record_type, record_id)` returns one meal, meal item, weight entry, or activity entry.
+- `update_record(record_type, record_id, patch)` applies partial updates and returns `changed_fields`.
+- Updating meal item quantity does not automatically recalculate calories or macros.
+- Meal updates may use `items_append` to add food or `items_replace` to replace all meal items.
+- Edited records keep `updated_at`; full audit logs are out of scope for the MVP.
 
 ### Persistence Layer
 
@@ -134,6 +143,10 @@ FITNESS_AGENT_DB_PATH=/tmp/fitness-agent-test.sqlite3
 ```
 
 The `data/` directory should be ignored by Git. Tests should use temporary SQLite files or in-memory databases.
+
+Because the MVP does not use Alembic yet, `init_db()` may apply small SQLite-only
+compatibility upgrades for local schema additions, such as adding missing `updated_at`
+columns to existing local tables.
 
 ## Initial Database Models
 

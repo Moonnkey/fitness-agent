@@ -3,7 +3,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -41,7 +41,25 @@ def get_session_factory() -> sessionmaker[Session]:
 def init_db() -> None:
     import app.core.models  # noqa: F401
 
-    Base.metadata.create_all(get_engine())
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+    _ensure_sqlite_schema_updates(engine)
+
+
+def _ensure_sqlite_schema_updates(engine: Engine) -> None:
+    if engine.url.get_backend_name() != "sqlite":
+        return
+
+    inspector = inspect(engine)
+    table_names = set(inspector.get_table_names())
+    for table_name in ("meal_items", "weight_entries", "activity_entries"):
+        if table_name not in table_names:
+            continue
+        column_names = {column["name"] for column in inspector.get_columns(table_name)}
+        if "updated_at" in column_names:
+            continue
+        with engine.begin() as connection:
+            connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN updated_at DATETIME"))
 
 
 def reset_engine_cache() -> None:

@@ -10,6 +10,7 @@ Fitness Agent 现在是一个本地优先的减脂健身记录工具。它已经
 - 活动记录：活动类型、时长、估算消耗。
 - 每日总结：摄入热量、活动消耗、净热量、蛋白质、目标热量、剩余热量。
 - 历史管理：按日期查询记录、按类型筛选、按 id 硬删除误记记录。
+- 记录编辑：按 id 查看单条记录，局部更新饮食、体重、活动和食物条目。
 - 重复提醒：记录饮食、体重或活动时返回疑似重复记录，方便 Agent 追问确认。
 
 它还不是完整 AI 教练。当前版本不做：
@@ -250,6 +251,73 @@ uv run fitness-agent records delete activity 1
 
 删除是硬删除，不会保留回收站或审计记录。删除前建议先用 `records list` 找到正确 id。
 
+查看单条记录详情：
+
+```bash
+uv run fitness-agent records show meal 1
+uv run fitness-agent records show meal_item 1
+uv run fitness-agent records show weight 1
+uv run fitness-agent records show activity 1
+```
+
+局部更新记录：
+
+```bash
+uv run fitness-agent records update weight 1 --json '{"weight_kg": 79.2}'
+```
+
+修改食物条目时，后端不会自动重算热量和三大营养素。如果数量或食物发生变化，需要同时传入更新后的营养值：
+
+```bash
+uv run fitness-agent records update meal_item 1 --json '{
+  "quantity": 3,
+  "calories": 216,
+  "protein_g": 18.9,
+  "carbs_g": 1.65,
+  "fat_g": 14.25
+}'
+```
+
+给已有一顿饭追加食物：
+
+```bash
+uv run fitness-agent records update meal 1 --json '{
+  "raw_text": "早餐两个鸡蛋和一杯无糖豆浆",
+  "items_append": [
+    {
+      "name": "无糖豆浆",
+      "quantity": 1,
+      "unit": "杯",
+      "calories": 80,
+      "protein_g": 7,
+      "carbs_g": 4,
+      "fat_g": 4,
+      "is_estimated": true
+    }
+  ]
+}'
+```
+
+替换整顿饭的食物条目：
+
+```bash
+uv run fitness-agent records update meal 1 --json '{
+  "raw_text": "早餐改成一个包子",
+  "items_replace": [
+    {
+      "name": "包子",
+      "quantity": 1,
+      "unit": "个",
+      "calories": 250,
+      "protein_g": 8,
+      "carbs_g": 35,
+      "fat_g": 8,
+      "is_estimated": true
+    }
+  ]
+}'
+```
+
 ## MCP 使用
 
 项目已经提供本地 MCP server：
@@ -283,6 +351,8 @@ codex mcp get fitness-agent
 - `record_activity`
 - `get_daily_summary`
 - `get_records_for_date`
+- `get_record`
+- `update_record`
 - `delete_record`
 - `check_duplicate_meal`
 - `check_duplicate_weight`
@@ -351,6 +421,20 @@ codex mcp get fitness-agent
 使用 fitness-agent MCP 工具删除 meal id=3，这是我刚才重复记录的一顿早餐。请调用 delete_record，然后再调用 get_records_for_date 确认今天记录里已经没有这条。
 ```
 
+### 修改记录
+
+```text
+我刚才体重记录错了，应该是 79.2kg。请使用 fitness-agent MCP 工具先调用 get_records_for_date 查询今天的 weight 记录；如果只有一条明显候选，就调用 update_record 把 weight_kg 改成 79.2；最后调用 get_record 返回修改后的记录。
+```
+
+```text
+我早餐的鸡蛋不是 2 个，是 3 个。请先调用 get_records_for_date 找到今天早餐的 meal 和对应 meal_item。然后按 3 个普通水煮蛋重新估算热量和三大营养素，并调用 update_record 更新这个 meal_item 的 quantity、calories、protein_g、carbs_g、fat_g。后端不会自动重算营养，所以你必须把更新后的营养值一起传入。
+```
+
+```text
+我早餐还喝了一杯无糖豆浆。请先找到今天早餐的 meal id，然后调用 update_record，给 meal patch 传 items_append，追加无糖豆浆这一项，并把 raw_text 更新成包含豆浆的原始描述。
+```
+
 ### 处理重复提醒
 
 ```text
@@ -362,7 +446,8 @@ codex mcp get fitness-agent
 - 后端不解析自然语言。自然语言解析和估算由 Agent 完成，然后传结构化数据给工具。
 - 热量、宏量营养素和活动消耗大多是估算值，除非用户明确提供或后续接入可靠数据源。
 - 当前有重复提醒，但不会自动拦截保存。Agent 应根据 `duplicate_warnings` 或 `check_duplicate_*` 结果向用户确认。
-- 当前支持按 id 硬删除记录，但还不支持编辑记录。录错时可以删除后重新记录。
+- 当前支持按 id 局部编辑和硬删除记录，但还不保留完整修改历史。
+- 修改食物数量时，后端不会自动重算营养；Agent 需要把更新后的热量和三大营养素一起传入。
 - 当前 summary 的 `remaining_calories` 是目标热量减摄入热量；`net_calories` 是摄入热量减活动消耗。
 - 当前体重趋势只是简单均值，不代表医学判断。
 
@@ -378,6 +463,7 @@ codex mcp get fitness-agent
 5. 每次运动调用 record_activity。
 6. 每天任意时间调用 get_daily_summary 查看当天状态。
 7. 如果怀疑重复或误记，让 Agent 调用 get_records_for_date 和 delete_record 处理。
+8. 如果需要纠错，让 Agent 先定位记录，再调用 get_record 或 update_record。
 ```
 
 开发调试时，推荐流程是：

@@ -223,3 +223,83 @@ Allowed `record_type` values:
 - `activity`
 
 This is a hard delete. Confirm intent when the user has not clearly requested deletion.
+
+## get_record
+
+Input:
+
+```json
+{
+  "record_type": "meal",
+  "record_id": 1
+}
+```
+
+Allowed `record_type` values:
+
+- `meal`
+- `meal_item`
+- `weight`
+- `activity`
+
+Use this when the user asks for one record's details or before applying a precise edit.
+
+## update_record
+
+Input:
+
+```json
+{
+  "record_type": "weight",
+  "record_id": 1,
+  "patch": {
+    "weight_kg": 79.2
+  }
+}
+```
+
+Returns the updated full record and `changed_fields`.
+
+For `meal_item`, partial patches are supported:
+
+```json
+{
+  "record_type": "meal_item",
+  "record_id": 1,
+  "patch": {
+    "quantity": 3,
+    "calories": 216,
+    "protein_g": 18.9,
+    "carbs_g": 1.65,
+    "fat_g": 14.25
+  }
+}
+```
+
+The backend does not automatically recalculate calories or macros when quantity changes. If the edit affects nutrition, the agent must estimate or otherwise provide updated nutrition fields in the patch.
+
+For `meal`, update outer fields directly and use `items_append` or `items_replace` for food items:
+
+```json
+{
+  "record_type": "meal",
+  "record_id": 1,
+  "patch": {
+    "raw_text": "早餐两个鸡蛋和一杯无糖豆浆",
+    "items_append": [
+      {
+        "name": "无糖豆浆",
+        "quantity": 1,
+        "unit": "杯",
+        "calories": 80,
+        "protein_g": 7,
+        "carbs_g": 4,
+        "fat_g": 4,
+        "is_estimated": true
+      }
+    ]
+  }
+}
+```
+
+Use `items_replace` only when the user clearly wants to replace the whole meal contents.

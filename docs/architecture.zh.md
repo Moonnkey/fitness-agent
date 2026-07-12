@@ -98,13 +98,21 @@ MCP 应该等 CLI 和 core services 跑通后再加。
 - `activity_service.py`
 - `record_service.py`
 
-`record_service.py` 负责跨类型的历史查询和硬删除。类型相关的重复判断保留在对应记录服务附近：
+`record_service.py` 负责跨类型的历史查询、单条详情查询、局部更新和硬删除。类型相关的重复判断保留在对应记录服务附近：
 
 - `meal_service.py` 判断疑似重复饮食记录。
 - `weight_service.py` 判断疑似重复体重记录。
 - `activity_service.py` 判断疑似重复活动记录。
 
 重复判断只做提醒，不会静默阻止保存。Agent 看到疑似重复但用户意图不明确时，应该先向用户确认。
+
+更新行为：
+
+- `get_record(record_type, record_id)` 返回一条 meal、meal_item、weight 或 activity 详情。
+- `update_record(record_type, record_id, patch)` 做局部更新，并返回 `changed_fields`。
+- 修改 meal item 数量时，后端不会自动重算热量和三大营养素。
+- meal 更新可以用 `items_append` 追加食物，也可以用 `items_replace` 替换整顿饭的所有食物条目。
+- 编辑后的记录保留 `updated_at`；完整 audit log 暂不属于 MVP 范围。
 
 ### 持久化层
 
@@ -134,6 +142,8 @@ FITNESS_AGENT_DB_PATH=/tmp/fitness-agent-test.sqlite3
 ```
 
 `data/` 目录应该被 Git 忽略。测试应该使用临时 SQLite 文件或内存数据库。
+
+因为 MVP 暂不引入 Alembic，`init_db()` 可以执行少量 SQLite-only 的兼容升级，比如给已有本地表补充缺失的 `updated_at` 列。
 
 ## 初始数据模型
 

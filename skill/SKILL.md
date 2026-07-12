@@ -1,12 +1,12 @@
 ---
 name: fitness-agent
-description: Use when the user wants to record, inspect, or delete meals, body weight, activity, update fitness or fat-loss profile data, or ask for daily calorie and macro summaries through the local Fitness Agent MCP tools. This skill guides agents to call update_user_profile, get_user_profile, record_meal, record_weight, get_weight_trend, record_activity, get_records_for_date, delete_record, duplicate-check tools, and get_daily_summary with structured or semi-structured payloads while preserving raw user text and uncertainty metadata.
+description: Use when the user wants to record, inspect, edit, or delete meals, body weight, activity, update fitness or fat-loss profile data, or ask for daily calorie and macro summaries through the local Fitness Agent MCP tools. This skill guides agents to call update_user_profile, get_user_profile, record_meal, record_weight, get_weight_trend, record_activity, get_records_for_date, get_record, update_record, delete_record, duplicate-check tools, and get_daily_summary with structured or semi-structured payloads while preserving raw user text and uncertainty metadata.
 ---
 
 # Fitness Agent
 
 Use the local Fitness Agent MCP tools as the source of truth for profile, meal, weight,
-activity, history, deletion, and daily summary data.
+activity, history, editing, deletion, and daily summary data.
 
 ## Workflow
 
@@ -18,12 +18,16 @@ activity, history, deletion, and daily summary data.
 6. For body weight observations, call `record_weight`; do not infer trends from a single weigh-in.
 7. For simple exercise or activity calorie records, call `record_activity`.
 8. For history questions, call `get_records_for_date`; use `record_type` to narrow to meals, weights, or activities when the user asks for one category.
-9. For correction requests such as "删掉刚才那条", first identify the record id with `get_records_for_date`, then call `delete_record`.
-10. Preserve the original user wording in `raw_text`.
-11. Put estimation assumptions, confidence, cooking method, brand, activity intensity, or missing context in `metadata`.
-12. For recent body-weight questions, call `get_weight_trend`.
-13. For daily totals or remaining calories, call `get_daily_summary`.
-14. Mark calories, macros, and activity burn as estimates unless the source is user-provided or database-derived.
+9. For detail questions, call `get_record` after identifying the record type and id.
+10. For correction requests, first identify candidate records with `get_records_for_date`; if more than one plausible candidate exists, ask the user to confirm before calling `update_record` or `delete_record`.
+11. Use `update_record` for partial edits. The backend does not automatically recalculate nutrition, so if quantity or food identity changes, provide updated calories, protein, carbs, and fat in the patch.
+12. For meal-level edits, use `items_append` to add food items and `items_replace` to replace all items in a meal.
+13. For deletion requests such as "删掉刚才那条", identify the record id first, then call `delete_record`.
+14. Preserve the original user wording in `raw_text`.
+15. Put estimation assumptions, confidence, cooking method, brand, activity intensity, or missing context in `metadata`.
+16. For recent body-weight questions, call `get_weight_trend`.
+17. For daily totals or remaining calories, call `get_daily_summary`.
+18. Mark calories, macros, and activity burn as estimates unless the source is user-provided or database-derived.
 
 ## Tool Contracts
 

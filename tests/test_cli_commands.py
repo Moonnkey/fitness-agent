@@ -130,6 +130,30 @@ def test_records_list_and_delete_commands() -> None:
     assert "Total records: 0" in list_after_delete.output
 
 
+def test_records_show_and_update_commands() -> None:
+    init_db()
+    runner = CliRunner()
+    weight_payload = {
+        "date": "today",
+        "weight_kg": 79.6,
+        "raw_text": "今天早上空腹 79.6kg",
+    }
+
+    add_result = runner.invoke(app, ["weight", "add", "--json", json.dumps(weight_payload)])
+    show_result = runner.invoke(app, ["records", "show", "weight", "1"])
+    update_result = runner.invoke(
+        app,
+        ["records", "update", "weight", "1", "--json", json.dumps({"weight_kg": 79.2})],
+    )
+
+    assert add_result.exit_code == 0
+    assert show_result.exit_code == 0
+    assert "weight_kg" in show_result.output
+    assert update_result.exit_code == 0
+    assert "Changed fields: weight_kg" in update_result.output
+    assert "79.2" in update_result.output
+
+
 def test_dev_reset_db_requires_yes() -> None:
     runner = CliRunner()
 

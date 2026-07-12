@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -24,3 +24,16 @@ class DeleteRecordOutput(BaseModel):
     record_type: DeletableRecordType
     record_id: int
     deleted: bool
+
+
+class RecordDetailOutput(BaseModel):
+    record_type: DeletableRecordType
+    record_id: int
+    record: dict[str, Any]
+
+
+class UpdateRecordOutput(BaseModel):
+    record_type: DeletableRecordType
+    record_id: int
+    changed_fields: list[str]
+    record: dict[str, Any]

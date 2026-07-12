@@ -30,7 +30,13 @@ from app.core.services.record_service import (
     delete_record as delete_record_service,
 )
 from app.core.services.record_service import (
+    get_record as get_record_service,
+)
+from app.core.services.record_service import (
     get_records_for_date as get_records_for_date_service,
+)
+from app.core.services.record_service import (
+    update_record as update_record_service,
 )
 from app.core.services.summary_service import get_daily_summary as get_daily_summary_service
 from app.core.services.weight_service import (
@@ -157,6 +163,20 @@ def build_mcp_server() -> FastMCP:
         """Hard-delete a meal, meal item, weight entry, or activity entry by id."""
         init_db()
         output = delete_record_service(record_type=record_type, record_id=record_id)
+        return _dump_model(output)
+
+    @mcp.tool()
+    def get_record(record_type: str, record_id: int) -> dict[str, Any]:
+        """Return one meal, meal item, weight entry, or activity entry by id."""
+        init_db()
+        output = get_record_service(record_type=record_type, record_id=record_id)
+        return _dump_model(output)
+
+    @mcp.tool()
+    def update_record(record_type: str, record_id: int, patch: dict[str, Any]) -> dict[str, Any]:
+        """Partially update one record and return changed fields plus the updated record."""
+        init_db()
+        output = update_record_service(record_type=record_type, record_id=record_id, patch=patch)
         return _dump_model(output)
 
     return mcp

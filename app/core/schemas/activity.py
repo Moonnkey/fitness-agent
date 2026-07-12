@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -19,6 +19,7 @@ class ActivityEntryOutput(ActivityEntryInput):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    updated_at: datetime | None = None
     duplicate_warnings: list[dict[str, Any]] = Field(default_factory=list)
 
 

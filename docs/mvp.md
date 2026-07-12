@@ -147,6 +147,19 @@ The fourth milestone is complete when:
 5. Skill and user guide explain how agents should confirm before saving likely duplicates.
 ```
 
+## Suggested Fifth Milestone
+
+The fifth milestone is complete when:
+
+```text
+1. Fetch one meal, meal item, weight entry, or activity entry by id.
+2. Partially update one record by id through CLI and MCP.
+3. Update meal outer fields, append meal items, and replace all meal items when requested.
+4. Return updated records with changed_fields.
+5. Preserve updated_at for edited records.
+6. Skill and user guide explain that nutrition is not automatically recalculated on quantity edits.
+```
+
 ## Data Quality Principles
 
 - Prefer structured values over free text once data reaches core services.

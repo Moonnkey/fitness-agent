@@ -22,6 +22,8 @@ async def test_mcp_server_lists_expected_tools() -> None:
         "check_duplicate_meal",
         "check_duplicate_weight",
         "check_duplicate_activity",
+        "get_record",
+        "update_record",
     }
 
 
@@ -170,6 +172,37 @@ async def test_mcp_tools_history_delete_and_duplicate_check() -> None:
     assert history_payload["total_record_count"] == 1
     assert delete_payload == {"record_type": "meal", "record_id": 1, "deleted": True}
     assert history_after_delete_payload["total_record_count"] == 0
+
+
+@pytest.mark.anyio
+async def test_mcp_tools_get_and_update_record() -> None:
+    server = build_mcp_server()
+
+    weight_result = await server.call_tool(
+        "record_weight",
+        {"weight": {"date": "2026-07-11", "weight_kg": 79.6}},
+    )
+    weight_id = _payload(weight_result)["id"]
+    detail_result = await server.call_tool(
+        "get_record",
+        {"record_type": "weight", "record_id": weight_id},
+    )
+    update_result = await server.call_tool(
+        "update_record",
+        {
+            "record_type": "weight",
+            "record_id": weight_id,
+            "patch": {"weight_kg": 79.2},
+        },
+    )
+
+    detail_payload = _payload(detail_result)
+    update_payload = _payload(update_result)
+
+    assert detail_payload["record"]["weight_kg"] == 79.6
+    assert update_payload["changed_fields"] == ["weight_kg"]
+    assert update_payload["record"]["weight_kg"] == 79.2
+    assert update_payload["record"]["updated_at"] is not None
 
 
 def _payload(result: object) -> object:

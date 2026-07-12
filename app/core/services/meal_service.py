@@ -30,6 +30,7 @@ def _to_output(meal: Meal) -> MealOutput:
             raw_text=item.raw_text,
             metadata=item.metadata_json,
             note=item.note,
+            updated_at=item.updated_at,
         )
         for item in meal.items
     ]
@@ -40,6 +41,7 @@ def _to_output(meal: Meal) -> MealOutput:
         raw_text=meal.raw_text,
         metadata=meal.metadata_json,
         note=meal.note,
+        updated_at=meal.updated_at,
         items=items,
         total_calories=sum(item.calories for item in items),
         total_protein_g=sum(item.protein_g for item in items),

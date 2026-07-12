@@ -14,7 +14,15 @@ from app.core.schemas.weight import WeightEntryInput
 from app.core.services.activity_service import record_activity
 from app.core.services.meal_service import record_meal
 from app.core.services.profile_service import get_user_profile, update_user_profile
-from app.core.services.record_service import DeleteRecordError, delete_record, get_records_for_date
+from app.core.services.record_service import (
+    DeleteRecordError,
+    RecordNotFoundError,
+    UpdateRecordError,
+    delete_record,
+    get_record,
+    get_records_for_date,
+    update_record,
+)
 from app.core.services.summary_service import get_daily_summary
 from app.core.services.weight_service import get_weight_trend, record_weight
 
@@ -24,7 +32,7 @@ meal_app = typer.Typer(help="Record meals.")
 summary_app = typer.Typer(help="Show daily summaries.")
 weight_app = typer.Typer(help="Record body weight.")
 activity_app = typer.Typer(help="Record activity calories.")
-records_app = typer.Typer(help="List and delete recorded data.")
+records_app = typer.Typer(help="List, show, update, and delete recorded data.")
 dev_app = typer.Typer(help="Development utilities.")
 
 app.add_typer(profile_app, name="profile")
@@ -242,6 +250,33 @@ def records_delete(record_type: str, record_id: int) -> None:
     except DeleteRecordError as exc:
         raise typer.BadParameter(str(exc)) from exc
     typer.echo(f"Deleted {output.record_type}: id={output.record_id}")
+
+
+@records_app.command("show")
+def records_show(record_type: str, record_id: int) -> None:
+    init_db()
+    try:
+        output = get_record(record_type=record_type, record_id=record_id)
+    except RecordNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(json.dumps(output.record, ensure_ascii=False, indent=2))
+
+
+@records_app.command("update")
+def records_update(
+    record_type: str,
+    record_id: int,
+    json_payload: Annotated[str, typer.Option("--json")],
+) -> None:
+    init_db()
+    try:
+        patch: dict[str, Any] = json.loads(json_payload)
+        output = update_record(record_type=record_type, record_id=record_id, patch=patch)
+    except (RecordNotFoundError, UpdateRecordError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(f"Updated {output.record_type}: id={output.record_id}")
+    typer.echo(f"Changed fields: {', '.join(output.changed_fields)}")
+    typer.echo(json.dumps(output.record, ensure_ascii=False, indent=2))
 
 
 @dev_app.command("reset-db")
