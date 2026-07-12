@@ -69,4 +69,6 @@ Before considering a code change complete:
 
 - Keep `docs/mvp.md` updated when scope changes.
 - Add short design notes under `docs/` for decisions that affect architecture or product behavior.
+- After each development stage, add or update a user-facing stage guide under `docs/stage-guides/`.
+- Each stage guide must explain what the user can do now, example agent prompts, CLI examples when relevant, current limitations, and risky/uncertain operations.
 - Avoid long speculative docs. Prefer concrete decisions, schemas, workflows, and examples.
