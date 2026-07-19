@@ -165,7 +165,7 @@ Agent 应：
 
 Agent 应追问或使用明确的估算假设，并把假设写入 `metadata`。
 
-## 大模型和 mock/rule-based
+## 大模型和 FakeModelClient
 
 第七阶段后端需要调用大模型。默认按 OpenAI API 设计。
 
@@ -176,20 +176,31 @@ OPENAI_API_KEY
 FITNESS_AGENT_MODEL
 ```
 
-`mock/rule-based` 是开发和测试用的备用模式：
+第七阶段只保留两个 model client：
 
-- `mock`：不调用真实大模型，返回固定结果，方便测试前后端闭环。
-- `rule-based`：用很简单的规则解析少数固定句式，例如“两个鸡蛋”。
+- `OpenAIModelClient`：真实业务 Agent，调用 OpenAI API，把用户自然语言解析成结构化 intent。
+- `FakeModelClient`：开发和测试替身，不理解用户输入，只返回预设 intent，用来跑通 Web Chat -> Agent service -> MCP -> DB -> response 全链路。
 
-它们不是最终产品智能能力，只用于：
+不做 `RuleBasedModelClient`。
 
-- 没有 API key 时也能跑本地 demo。
+原因：
+
+- 规则解析会让用户感觉“好像能聊”，但实际只能识别少量固定句式，体感容易很差。
+- 规则分支容易散落成临时代码，后续难维护。
+- 真实产品智能应该来自 `OpenAIModelClient`。
+- 当 OpenAI agent 出错时，应该返回清晰错误或要求用户重试，而不是用规则猜测。
+
+`FakeModelClient` 只用于：
+
 - 自动化测试不依赖外部网络。
 - 开发前端和 MCP 链路时降低成本。
+- 调试时把模型解析问题和 Web/MCP/DB 链路问题解耦。
 
-生产或真实使用时应使用大模型 API。
+生产或真实使用时应使用 `OpenAIModelClient`。
 
 用户不需要把 API key 写进代码，也不应该提交到 Git。
+
+如果没有配置 `OPENAI_API_KEY`，真实模式应返回清晰错误。只有显式设置测试/开发模式时，才可以启用 `FakeModelClient`。
 
 ## 后端 API
 
@@ -309,6 +320,6 @@ http://电脑局域网IP:8000
 5. 用户可以问今日总结、周报、日内建议。
 6. 明确的修改/删除指令可以通过 MCP tools 执行。
 7. 不保存聊天消息。
-8. 没有 API key 时有清晰错误，或可切换到 mock 模式。
+8. 没有 API key 时真实模式返回清晰错误；测试/开发模式可显式启用 FakeModelClient。
 9. 完整测试、lint 和至少一个 CLI 或 HTTP smoke test 通过。
 ```

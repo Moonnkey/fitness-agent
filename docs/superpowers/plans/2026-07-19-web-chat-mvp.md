@@ -18,7 +18,8 @@ client. Agent add-on usage through Codex/Skill/MCP remains unchanged.
 - Use FastAPI for HTTP.
 - Serve minimal static HTML/CSS/JS from the Python app.
 - Use OpenAI API by default through environment variables.
-- Provide mock/rule-based mode for tests and local demo without API calls.
+- Provide FakeModelClient for tests and explicit development mode without API calls.
+- Do not add RuleBasedModelClient; model failures should surface clear errors instead of falling back to brittle rules.
 - Do not persist chat messages.
 - Local-network access only; no login in this stage.
 - No image upload in this stage.
@@ -36,7 +37,7 @@ client. Agent add-on usage through Codex/Skill/MCP remains unchanged.
 - `app/agent/schemas.py`
   - Structured model output schemas.
 - `app/agent/model_client.py`
-  - OpenAI/mock model client boundary.
+  - OpenAI/Fake model client boundary.
 - `app/agent/mcp_client.py`
   - MCP client wrapper for calling `fitness-agent-mcp`.
 - `app/agent/tool_dispatcher.py`
@@ -72,7 +73,7 @@ client. Agent add-on usage through Codex/Skill/MCP remains unchanged.
 
 - [ ] Add dependencies for FastAPI server and OpenAI client if needed.
 - [ ] Add Web Chat design docs and plan.
-- [ ] Add model client abstraction with mock mode.
+- [ ] Add model client abstraction with OpenAIModelClient and FakeModelClient.
 - [ ] Add MCP client wrapper.
 - [ ] Add intent schemas and tool dispatcher.
 - [ ] Add chat service tests with mock model and mocked MCP calls.
