@@ -72,3 +72,31 @@ Before considering a code change complete:
 - After each development stage, add or update a user-facing stage guide under `docs/stage-guides/`.
 - Each stage guide must explain what the user can do now, example agent prompts, CLI examples when relevant, current limitations, and risky/uncertain operations.
 - Avoid long speculative docs. Prefer concrete decisions, schemas, workflows, and examples.
+
+## Learning And Interview Retrospective Rules
+
+The project is also used to learn AI Agent / Harness engineering and prepare for AI Agent engineering interviews. After each non-trivial development stage, preserve the engineering practice as learning and interview material.
+
+- After each non-trivial development stage, update or add one retrospective document under `docs/learning/stage-retrospectives/YYYY-MM-DD-<short-topic>.md`.
+- A retrospective must cover:
+  - What was implemented in this stage.
+  - Which core modules, CLI, MCP, schemas, services, models, or docs changed.
+  - Which design decisions were made and why.
+  - Which AI Agent / Harness engineering concepts this work maps to.
+  - How to explain this project in interview language.
+  - Likely interviewer follow-up questions and recommended answers.
+  - Current limitations, risks, and next steps.
+- Retrospectives should use the ideas from the learn-claude-code material, especially:
+  - Agent product = model + harness.
+  - Harness includes tools, knowledge, observation, action interfaces, and permissions.
+  - Relevant concepts include agent loop, tool use, permission, skill loading, memory, context management, MCP, multi-agent patterns, and task systems.
+  - Do not mechanically copy the tutorial. Explain these ideas through this health and fat-loss assistant.
+- In this project, use these mappings:
+  - `app/core/services` is the stable business capability layer.
+  - CLI, MCP, and future mobile APIs are action interfaces / tool surfaces.
+  - The SQLite database is persistent storage for business facts and user records. It is not the same as Agent memory. These records become observation sources when an Agent queries them through core services and injects them into current context. Long-term reusable goals, preferences, habits, and constraints extracted from interaction are closer to Agent memory.
+  - `docs`, stage guides, and schema notes are knowledge.
+  - Health safety rules, privacy rules, and approval boundaries are permissions / safety boundaries.
+  - The future independent Agent layer handles intent understanding, planning, clarification, tool calling, and result explanation.
+- Do not let retrospectives slow down small fixes. Only write stage retrospectives for feature work, architecture changes, interface changes, data model changes, or Agent/MCP/CLI capability changes.
+- Do not record real personal health data, API keys, private database paths, or any sensitive information in retrospectives.
