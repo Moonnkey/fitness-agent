@@ -55,8 +55,28 @@ Skill：告诉 Agent 什么时候、怎么调用 MCP tools
 
 - 比直接调用 core services 多一层 MCP client/server。
 - 本地启动和测试链路更复杂。
+- 响应时间会变长，尤其是一次聊天需要模型规划和多次 tool call 时。
 
 这个代价可以接受，因为项目目标之一是把 fitness-agent 做成可被各种 Agent 使用的工具能力。
+
+## 性能取舍
+
+第七阶段优先跑通 Web Chat 到 MCP tools 的功能闭环，不优先优化响应时间。
+
+当前链路包含模型规划和多次 MCP tool call：
+
+```text
+Web Chat -> OpenAIModelClient -> ChatService -> MCP stdio client -> MCP tools -> core services
+```
+
+这会比 Web 后端直接调用 `app/core/services` 更慢。这个取舍是有意的，因为它让内置 Web Chat Agent、Codex 和未来外部 Agent 复用同一套 MCP tool contract。
+
+后续性能优化方向：
+
+- 复用 MCP session，避免每次 tool call 都重新初始化。
+- 合并或减少不必要的工具调用。
+- 优化模型选择和 prompt，减少 planning 延迟。
+- 增加流式响应或前端 loading 状态。
 
 ## 轻量 Agent 是什么
 

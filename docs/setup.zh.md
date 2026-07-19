@@ -63,6 +63,20 @@ export OPENAI_API_KEY="你的 OpenAI API key"
 export FITNESS_AGENT_MODEL="gpt-4.1-mini"
 ```
 
+如果使用 OpenAI-compatible 中转站，还需要配置中转站地址和它支持的模型名：
+
+```bash
+export OPENAI_API_KEY="你的中转站 key"
+export OPENAI_BASE_URL="https://中转站域名/v1"
+export FITNESS_AGENT_MODEL="中转站支持的模型名"
+```
+
+如果本机配置了 `all_proxy`、`http_proxy` 或 `https_proxy`，项目依赖已包含 `httpx[socks]`，可以支持常见 SOCKS 代理。修改依赖后需要重新运行：
+
+```bash
+uv sync --extra dev --extra mcp
+```
+
 启动 Web Chat：
 
 ```bash

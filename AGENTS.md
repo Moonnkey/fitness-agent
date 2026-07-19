@@ -39,6 +39,8 @@ Build a local-first AI fitness and fat-loss assistant. The MVP records meals, we
 - Treat calorie, macro, and exercise-burn values as estimates unless they come from a verified source.
 - Store enough metadata to explain estimates later, such as source, assumptions, and confidence when practical.
 - Prefer asking a short follow-up question when a missing value would materially change the result.
+- Do not block meal recording only because the meal type is missing. Default unclear meal type to `other` and record the assumption in metadata or the reply.
+- Default unclear meal dates to today for casual meal logging, unless the user indicates another date.
 - If a reasonable default is used, surface it as an estimate.
 - Preserve user privacy. Do not commit real user health data, database files, API keys, or secrets.
 

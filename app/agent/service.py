@@ -2,6 +2,8 @@ from app.agent.mcp_client import MCPClient
 from app.agent.model_client import ModelClient
 from app.agent.schemas import ChatAgentResult, ToolCallResult
 
+MEAL_TOOL_NAMES = {"record_meal", "check_duplicate_meal"}
+
 
 class ChatService:
     def __init__(self, model_client: ModelClient, mcp_client: MCPClient) -> None:
@@ -18,13 +20,14 @@ class ChatService:
 
         tool_results: list[ToolCallResult] = []
         for call in plan.tool_calls:
+            arguments = _normalize_tool_arguments(call.name, call.arguments)
             try:
-                result = await self.mcp_client.call_tool(call.name, call.arguments)
+                result = await self.mcp_client.call_tool(call.name, arguments)
             except Exception as exc:
                 tool_results.append(
                     ToolCallResult(
                         name=call.name,
-                        arguments=call.arguments,
+                        arguments=arguments,
                         ok=False,
                         error=str(exc),
                     )
@@ -36,7 +39,7 @@ class ChatService:
 
             tool_result = ToolCallResult(
                 name=call.name,
-                arguments=call.arguments,
+                arguments=arguments,
                 ok=True,
                 result=result,
             )
@@ -51,6 +54,33 @@ class ChatService:
             reply=_build_reply(tool_results, plan.direct_reply),
             tool_calls=tool_results,
         )
+
+
+def _normalize_tool_arguments(name: str, arguments: dict) -> dict:
+    if name not in MEAL_TOOL_NAMES:
+        return arguments
+    meal = arguments.get("meal")
+    if not isinstance(meal, dict):
+        return arguments
+
+    normalized_meal = dict(meal)
+    agent_defaults: list[str] = []
+    if "date" not in normalized_meal:
+        normalized_meal["date"] = "today"
+        agent_defaults.append("date defaulted to today because user did not specify a date")
+    if "meal_type" not in normalized_meal:
+        normalized_meal["meal_type"] = "other"
+        agent_defaults.append("meal_type defaulted to other because user did not specify meal time")
+    if agent_defaults:
+        metadata = normalized_meal.get("metadata")
+        if not isinstance(metadata, dict):
+            metadata = {}
+        existing_defaults = metadata.get("agent_defaults", [])
+        if not isinstance(existing_defaults, list):
+            existing_defaults = [existing_defaults]
+        metadata["agent_defaults"] = [*existing_defaults, *agent_defaults]
+        normalized_meal["metadata"] = metadata
+    return {**arguments, "meal": normalized_meal}
 
 
 def _duplicate_reply(result: dict) -> str:

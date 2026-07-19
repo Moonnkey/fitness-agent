@@ -89,6 +89,12 @@ logic remains centralized.
 There is intentionally no `RuleBasedModelClient`; model configuration or parsing
 failures should surface clear errors rather than falling back to brittle rules.
 
+Performance tradeoff:
+
+- Stage 07 prioritizes the Web Chat to MCP tools functional loop over response latency.
+- Current latency may come from model/proxy response time and stdio MCP client initialization for each tool call.
+- Later optimizations can reuse MCP sessions, reduce tool calls, improve model planning, and add streaming responses.
+
 ### Core Schemas
 
 Location: `app/core/schemas`
@@ -248,6 +254,13 @@ Allowed `meal_type` values:
 - `dinner`
 - `snack`
 - `other`
+
+Product behavior:
+
+- `meal_type` is an auxiliary category, not a core input for calorie totals.
+- Missing meal type should not block recording.
+- The Agent or interface layer should default unclear meal type to `other` and mention the assumption in `metadata` or the reply.
+- Ask a clarification question only when unclear food type, quantity, portion size, or cooking method would materially change calorie or macro estimates.
 
 ### MealItem
 

@@ -13,8 +13,11 @@ def test_split_args_preserves_quoted_values() -> None:
 
 
 @pytest.mark.anyio
-async def test_stdio_fitness_mcp_client_calls_local_server() -> None:
-    client = StdioFitnessMCPClient(command=".venv/bin/fitness-agent-mcp")
+async def test_stdio_fitness_mcp_client_calls_local_server(tmp_path) -> None:
+    client = StdioFitnessMCPClient(
+        command=".venv/bin/fitness-agent-mcp",
+        env={"FITNESS_AGENT_DB_PATH": str(tmp_path / "mcp-client.sqlite3")},
+    )
 
     result = await client.call_tool("get_daily_summary", {"date_value": "2026-07-19"})
 

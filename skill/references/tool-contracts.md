@@ -76,6 +76,8 @@ Input:
 ```
 
 The backend does not parse natural language. The agent should parse or estimate fields before calling `record_meal`.
+If the user does not specify breakfast, lunch, dinner, or snack, use `meal_type: "other"` instead of asking only for meal type. Missing meal type does not materially affect daily calorie totals.
+Ask a clarification question only when the missing information would materially change calories or macros, such as unclear food, quantity, portion size, or cooking method.
 The response may include `duplicate_warnings`; if present and the user did not explicitly request another copy, ask for confirmation before saving more duplicate records.
 
 ## check_duplicate_meal

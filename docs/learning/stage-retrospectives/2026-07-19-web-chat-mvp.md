@@ -235,12 +235,12 @@ FakeModelClient 不理解输入，只返回测试里预设的 AgentPlan，用来
 - 没有登录、多用户、HTTPS 或公网部署能力。
 - 复杂多轮追问和 pending-action 还没有实现。
 - 当前模型规划只靠 prompt 和 schema 约束，还没有系统化 eval。
-- stdio MCP client 每次调用工具的开销后续需要评估。
+- 第七阶段先接受响应较慢的体感；主要风险来自模型/中转站响应，以及 stdio MCP client 每次调用工具的初始化开销。
 
 下一步：
 
 - 为 Agent planning 建立 eval case：用户输入、期望工具序列、期望关键参数。
-- 增强澄清流程，例如缺少数量、餐别、日期时生成 pending action。
+- 增强澄清流程：餐别缺失不追问，默认 `other`；数量、份量、做法等会显著影响估算的信息缺失时，再生成 pending action。
 - 引入图片识别/OCR 前，先定义图片分析结果如何转成现有 `record_meal` 或体重记录 schema。
-- 评估 MCP client session 复用，降低 Web Chat 响应延迟。
+- 评估 MCP client session 复用、减少工具调用次数和流式响应，降低 Web Chat 响应延迟。
 - 设计真正的 memory：从用户目标、偏好、过敏/忌口、常吃食物中提炼长期可复用信息。

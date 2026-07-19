@@ -193,6 +193,8 @@ The seventh milestone is complete when:
 - Keep original user text where useful for later audit.
 - Store whether values are user-provided, database-derived, or estimated.
 - Do not hide uncertainty. Estimated values should be visible in summaries.
+- Keep meal logging low-friction. Missing meal type should not block recording; use `other`. Missing date in casual meal logging should default to today.
+- Ask a clarification question only when missing information would materially change calorie or macro estimates, such as unclear food type, quantity, portion size, or cooking method.
 
 ## Safety Principles
 

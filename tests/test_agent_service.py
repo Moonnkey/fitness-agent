@@ -70,6 +70,46 @@ async def test_chat_service_records_meal_and_returns_summary_reply() -> None:
 
 
 @pytest.mark.anyio
+async def test_chat_service_defaults_missing_meal_type_to_other() -> None:
+    plan = AgentPlan(
+        tool_calls=[
+            PlannedToolCall(
+                name="check_duplicate_meal",
+                arguments={
+                    "meal": {
+                        "date": "today",
+                        "raw_text": "我吃了两个鸡蛋",
+                        "items": [
+                            {
+                                "name": "鸡蛋",
+                                "quantity": 2,
+                                "unit": "个",
+                                "calories": 144,
+                                "protein_g": 12,
+                                "carbs_g": 1,
+                                "fat_g": 10,
+                                "source": "agent_estimate",
+                                "is_estimated": True,
+                            }
+                        ],
+                    }
+                },
+            )
+        ]
+    )
+    mcp_client = FakeMCPClient({"check_duplicate_meal": {"duplicates": []}})
+    service = ChatService(model_client=FakeModelClient(plan), mcp_client=mcp_client)
+
+    await service.handle_message("我吃了两个鸡蛋")
+
+    meal_payload = mcp_client.calls[0][1]["meal"]
+    assert meal_payload["meal_type"] == "other"
+    assert meal_payload["metadata"]["agent_defaults"] == [
+        "meal_type defaulted to other because user did not specify meal time"
+    ]
+
+
+@pytest.mark.anyio
 async def test_chat_service_stops_when_duplicate_meal_found() -> None:
     plan = AgentPlan(
         tool_calls=[

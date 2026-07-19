@@ -13,24 +13,26 @@ activity, history, editing, deletion, daily summary, weekly report, and guidance
 1. Identify whether the user is updating their profile, recording a meal, recording body weight, recording activity, or asking for a summary.
 2. For profile changes, call `update_user_profile`.
 3. For meal records, parse the user's description into structured meal items before calling `record_meal`.
-4. Before recording data that looks similar to an existing entry, call the matching duplicate-check tool or inspect `duplicate_warnings`.
-5. If a duplicate warning appears and the user did not explicitly say to save anyway, ask a short confirmation question before recording another copy.
-6. For body weight observations, call `record_weight`; do not infer trends from a single weigh-in.
-7. For simple exercise or activity calorie records, call `record_activity`.
-8. For history questions, call `get_records_for_date`; use `record_type` to narrow to meals, weights, or activities when the user asks for one category.
-9. For detail questions, call `get_record` after identifying the record type and id.
-10. For correction requests, first identify candidate records with `get_records_for_date`; if more than one plausible candidate exists, ask the user to confirm before calling `update_record` or `delete_record`.
-11. Use `update_record` for partial edits. The backend does not automatically recalculate nutrition, so if quantity or food identity changes, provide updated calories, protein, carbs, and fat in the patch.
-12. For meal-level edits, use `items_append` to add food items and `items_replace` to replace all items in a meal.
-13. For deletion requests such as "删掉刚才那条", identify the record id first, then call `delete_record`.
-14. Preserve the original user wording in `raw_text`.
-15. Put estimation assumptions, confidence, cooking method, brand, activity intensity, or missing context in `metadata`.
-16. For recent body-weight questions, call `get_weight_trend`.
-17. For daily totals or remaining calories, call `get_daily_summary`.
-18. For weekly performance, trend, or "this week" questions, call `get_weekly_summary`.
-19. For "what should I eat later today" or day-level adjustment questions, call `get_daily_guidance`.
-20. Use `report_text` for direct user-facing summaries, and use structured fields such as `daily_points` when the user asks for detailed numbers.
-21. Mark calories, macros, and activity burn as estimates unless the source is user-provided or database-derived.
+4. Do not ask only because the meal type is missing. Use `meal_type: "other"` when the user does not specify breakfast, lunch, dinner, or snack.
+5. Ask a clarification question only when missing food, quantity, portion size, or cooking method would materially change calorie or macro estimates.
+6. Before recording data that looks similar to an existing entry, call the matching duplicate-check tool or inspect `duplicate_warnings`.
+7. If a duplicate warning appears and the user did not explicitly say to save anyway, ask a short confirmation question before recording another copy.
+8. For body weight observations, call `record_weight`; do not infer trends from a single weigh-in.
+9. For simple exercise or activity calorie records, call `record_activity`.
+10. For history questions, call `get_records_for_date`; use `record_type` to narrow to meals, weights, or activities when the user asks for one category.
+11. For detail questions, call `get_record` after identifying the record type and id.
+12. For correction requests, first identify candidate records with `get_records_for_date`; if more than one plausible candidate exists, ask the user to confirm before calling `update_record` or `delete_record`.
+13. Use `update_record` for partial edits. The backend does not automatically recalculate nutrition, so if quantity or food identity changes, provide updated calories, protein, carbs, and fat in the patch.
+14. For meal-level edits, use `items_append` to add food items and `items_replace` to replace all items in a meal.
+15. For deletion requests such as "删掉刚才那条", identify the record id first, then call `delete_record`.
+16. Preserve the original user wording in `raw_text`.
+17. Put estimation assumptions, confidence, cooking method, brand, activity intensity, or missing context in `metadata`.
+18. For recent body-weight questions, call `get_weight_trend`.
+19. For daily totals or remaining calories, call `get_daily_summary`.
+20. For weekly performance, trend, or "this week" questions, call `get_weekly_summary`.
+21. For "what should I eat later today" or day-level adjustment questions, call `get_daily_guidance`.
+22. Use `report_text` for direct user-facing summaries, and use structured fields such as `daily_points` when the user asks for detailed numbers.
+23. Mark calories, macros, and activity burn as estimates unless the source is user-provided or database-derived.
 
 ## Tool Contracts
 
