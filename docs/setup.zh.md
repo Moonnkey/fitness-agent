@@ -11,6 +11,7 @@ CLI
 pytest
 MCP server
 Skill
+FastAPI Web Chat
 ```
 
 RAG、embedding 和数据分析也会优先留在 Python 侧。
@@ -44,7 +45,7 @@ uv --version
 安装好 `uv` 后，在项目目录运行：
 
 ```bash
-uv sync --extra dev
+uv sync --extra dev --extra mcp
 ```
 
 后续运行测试：
@@ -52,6 +53,35 @@ uv sync --extra dev
 ```bash
 uv run pytest
 ```
+
+## Web Chat 本地启动
+
+真实聊天模式需要 OpenAI API key：
+
+```bash
+export OPENAI_API_KEY="你的 OpenAI API key"
+export FITNESS_AGENT_MODEL="gpt-4.1-mini"
+```
+
+启动 Web Chat：
+
+```bash
+uv run fitness-agent-web
+```
+
+电脑访问：
+
+```text
+http://127.0.0.1:8000
+```
+
+手机和电脑在同一局域网时，手机访问：
+
+```text
+http://电脑局域网IP:8000
+```
+
+第七阶段没有登录和 HTTPS，只适合可信本地局域网测试，不要直接暴露到公网。
 
 ## 远端仓库
 

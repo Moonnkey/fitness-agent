@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fitness Agent</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Fitness Agent</h1>
+          <p>本地饮食记录助手</p>
+        </div>
+        <button id="summaryButton" type="button">今日</button>
+      </header>
+
+      <section id="messages" class="messages" aria-live="polite">
+        <div class="message assistant">
+          你好，告诉我你今天吃了什么，或者问我今天还剩多少热量。
+        </div>
+      </section>
+
+      <form id="chatForm" class="composer">
+        <textarea
+          id="messageInput"
+          name="message"
+          rows="2"
+          placeholder="例如：早餐吃了两个鸡蛋和一杯无糖豆浆"
+          required
+        ></textarea>
+        <button id="sendButton" type="submit">发送</button>
+      </form>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

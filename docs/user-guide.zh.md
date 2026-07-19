@@ -12,6 +12,7 @@ Fitness Agent 现在是一个本地优先的减脂健身记录工具。它已经
 - 历史管理：按日期查询记录、按类型筛选、按 id 硬删除误记记录。
 - 记录编辑：按 id 查看单条记录，局部更新饮食、体重、活动和食物条目。
 - 重复提醒：记录饮食、体重或活动时返回疑似重复记录，方便 Agent 追问确认。
+- Web Chat：本地启动一个极简聊天页面，手机可在同一局域网访问。
 
 它还不是完整 AI 教练。当前版本不做：
 
@@ -30,6 +31,7 @@ Fitness Agent 现在是一个本地优先的减脂健身记录工具。它已经
 
 - [第五阶段：单条详情和记录纠错](stage-guides/stage-05-record-detail-update.zh.md)
 - [第六阶段：文字周报、趋势和日内建议](stage-guides/stage-06-text-reports-and-trends.zh.md)
+- [第七阶段：Web Chat 最小闭环](stage-guides/stage-07-web-chat-mvp.zh.md)
 
 ## 数据保存在哪里
 
@@ -79,6 +81,35 @@ records
 guidance
 dev
 ```
+
+## Web Chat 使用
+
+启动本地聊天服务：
+
+```bash
+uv run fitness-agent-web
+```
+
+电脑访问：
+
+```text
+http://127.0.0.1:8000
+```
+
+手机访问：
+
+```text
+http://电脑局域网IP:8000
+```
+
+真实聊天模式需要配置 OpenAI API key：
+
+```bash
+export OPENAI_API_KEY="你的 OpenAI API key"
+export FITNESS_AGENT_MODEL="gpt-4.1-mini"
+```
+
+第七阶段 Web Chat 不保存聊天记录，不做登录，不适合直接暴露公网。
 
 ## CLI 使用
 

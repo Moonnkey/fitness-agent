@@ -84,10 +84,11 @@ The initial target user is a single local user who wants help tracking fat-loss 
 
 ## Out Of Scope
 
-- Web UI.
+- Full web reporting UI beyond the local Web Chat MVP.
 - Mobile app.
 - Multi-user accounts.
 - Authentication.
+- Public deployment.
 - Cloud sync.
 - Payment or subscription features.
 - Full workout programming engine.
@@ -172,6 +173,20 @@ The sixth milestone is complete when:
 5. Document limitations: no exact meal planning, food database, RAG, or frontend charts yet.
 ```
 
+## Suggested Seventh Milestone
+
+The seventh milestone is complete when:
+
+```text
+1. Start a local FastAPI Web Chat service.
+2. Serve a minimal mobile-friendly chat page on the local network.
+3. Use a lightweight agent to turn chat messages into MCP tool-call plans.
+4. Call existing fitness-agent MCP tools through an MCP client.
+5. Support text meal recording, today's summary, weekly summary, and daily guidance.
+6. Keep Codex/Skill/MCP add-on mode unchanged.
+7. Do not persist chat messages, add login, upload images, or deploy publicly yet.
+```
+
 ## Data Quality Principles
 
 - Prefer structured values over free text once data reaches core services.
@@ -195,4 +210,4 @@ After the MVP works:
 - Add structured strength training logs with exercise and muscle-group mapping.
 - Add RAG for nutrition and training knowledge.
 - Add an installable plugin package.
-- Add a web or mobile interface if the local assistant proves useful.
+- Add richer web charts or a mobile app if the local assistant proves useful.

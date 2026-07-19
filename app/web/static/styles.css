@@ -1,0 +1,122 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f6f7f9;
+  color: #18202a;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 720px;
+  margin: 0 auto;
+  background: #ffffff;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border-bottom: 1px solid #e2e6ea;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.topbar p {
+  margin: 4px 0 0;
+  color: #66717f;
+  font-size: 13px;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  background: #176b5d;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.topbar button {
+  min-width: 56px;
+  height: 40px;
+}
+
+.messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.message {
+  width: fit-content;
+  max-width: min(86%, 560px);
+  padding: 10px 12px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  line-height: 1.45;
+  font-size: 15px;
+}
+
+.message.user {
+  align-self: flex-end;
+  background: #176b5d;
+  color: #ffffff;
+}
+
+.message.assistant {
+  align-self: flex-start;
+  background: #eef2f4;
+  color: #18202a;
+}
+
+.message.error {
+  align-self: flex-start;
+  background: #fff0ed;
+  color: #8a1f11;
+}
+
+.composer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid #e2e6ea;
+  background: #ffffff;
+}
+
+textarea {
+  width: 100%;
+  min-height: 48px;
+  max-height: 120px;
+  resize: vertical;
+  border: 1px solid #cfd6dd;
+  border-radius: 8px;
+  padding: 10px;
+  font: inherit;
+}
+
+.composer button {
+  width: 72px;
+}

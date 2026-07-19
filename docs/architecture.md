@@ -56,6 +56,39 @@ Responsibilities:
 
 MCP should be added after the CLI and core services are working.
 
+### Web Layer
+
+Location: `app/web`
+
+Responsibilities:
+
+- Serve a minimal local Web Chat page.
+- Expose HTTP APIs such as `/api/chat`, `/api/summary/today`, and `/api/weekly-summary`.
+- Keep the mobile chat UI simple and local-network oriented.
+- Do not persist chat messages in the MVP.
+
+The Web layer should not contain calorie, nutrition, summary, or persistence logic.
+
+### Lightweight Agent Layer
+
+Location: `app/agent`
+
+Responsibilities:
+
+- Convert user chat messages into structured MCP tool-call plans.
+- Call OpenAI through `OpenAIModelClient` in real usage.
+- Use `FakeModelClient` only in explicit development or tests.
+- Call `fitness-agent` MCP tools through an MCP client.
+- Return concise Chinese replies for the Web Chat UI.
+
+The Web Chat agent calls MCP tools rather than core services directly. This keeps
+Codex, future external agents, and the built-in Web Chat agent on the same tool
+contract. The underlying MCP tools still call `app/core/services`, so business
+logic remains centralized.
+
+There is intentionally no `RuleBasedModelClient`; model configuration or parsing
+failures should surface clear errors rather than falling back to brittle rules.
+
 ### Core Schemas
 
 Location: `app/core/schemas`
