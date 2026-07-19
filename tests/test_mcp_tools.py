@@ -24,6 +24,8 @@ async def test_mcp_server_lists_expected_tools() -> None:
         "check_duplicate_activity",
         "get_record",
         "update_record",
+        "get_weekly_summary",
+        "get_daily_guidance",
     }
 
 
@@ -203,6 +205,55 @@ async def test_mcp_tools_get_and_update_record() -> None:
     assert update_payload["changed_fields"] == ["weight_kg"]
     assert update_payload["record"]["weight_kg"] == 79.2
     assert update_payload["record"]["updated_at"] is not None
+
+
+@pytest.mark.anyio
+async def test_mcp_tools_weekly_summary_and_guidance() -> None:
+    server = build_mcp_server()
+
+    await server.call_tool(
+        "update_user_profile",
+        {
+            "profile": {
+                "height_cm": 180,
+                "weight_kg": 80,
+                "age": 30,
+                "sex": "male",
+                "activity_level": "moderate",
+                "goal_type": "fat_loss",
+                "target_calories": 2000,
+                "target_protein_g": 150,
+            }
+        },
+    )
+    await server.call_tool(
+        "record_meal",
+        {
+            "meal": {
+                "date": "2026-07-19",
+                "meal_type": "breakfast",
+                "items": [{"name": "鸡蛋", "calories": 500, "protein_g": 40}],
+            }
+        },
+    )
+
+    weekly_result = await server.call_tool(
+        "get_weekly_summary",
+        {"end_date_value": "2026-07-19", "days": 7},
+    )
+    guidance_result = await server.call_tool(
+        "get_daily_guidance",
+        {"date_value": "2026-07-19"},
+    )
+
+    weekly_payload = _payload(weekly_result)
+    guidance_payload = _payload(guidance_result)
+
+    assert weekly_payload["days"] == 7
+    assert len(weekly_payload["daily_points"]) == 7
+    assert "过去 7 天" in weekly_payload["report_text"]
+    assert guidance_payload["remaining_calories"] == 1500
+    assert "今天目前摄入" in guidance_payload["report_text"]
 
 
 def _payload(result: object) -> object:

@@ -29,6 +29,7 @@ Fitness Agent 现在是一个本地优先的减脂健身记录工具。它已经
 当前阶段手册：
 
 - [第五阶段：单条详情和记录纠错](stage-guides/stage-05-record-detail-update.zh.md)
+- [第六阶段：文字周报、趋势和日内建议](stage-guides/stage-06-text-reports-and-trends.zh.md)
 
 ## 数据保存在哪里
 
@@ -75,6 +76,7 @@ summary
 weight
 activity
 records
+guidance
 dev
 ```
 
@@ -232,7 +234,40 @@ summary 当前包含：
 - 餐次数量。
 - 估算条目数量。
 
-### 7. 查询和删除历史记录
+查看最近 7 天文字周报：
+
+```bash
+uv run fitness-agent summary week --days 7
+```
+
+查看指定结束日期的周报：
+
+```bash
+uv run fitness-agent summary week --days 7 --end-date 2026-07-19
+```
+
+### 7. 查看日内建议
+
+查看今天后续饮食建议：
+
+```bash
+uv run fitness-agent guidance today
+```
+
+查看指定日期建议：
+
+```bash
+uv run fitness-agent guidance date 2026-07-19
+```
+
+日内建议会参考：
+
+- 今天已摄入热量。
+- 目标热量和剩余热量。
+- 当前蛋白质和蛋白质缺口。
+- 活动消耗和净热量。
+
+### 8. 查询和删除历史记录
 
 查询今天所有记录：
 
@@ -365,6 +400,8 @@ codex mcp get fitness-agent
 - `check_duplicate_meal`
 - `check_duplicate_weight`
 - `check_duplicate_activity`
+- `get_weekly_summary`
+- `get_daily_guidance`
 
 ## 给 Agent 的提示词示例
 
@@ -449,6 +486,18 @@ codex mcp get fitness-agent
 使用 fitness-agent MCP 工具记录早餐：今天早餐吃了两个鸡蛋。请先估算营养并调用 check_duplicate_meal 检查是否疑似重复；如果发现重复，先告诉我疑似重复记录并问我要不要继续保存；如果没有重复，再调用 record_meal 保存。
 ```
 
+### 总结周报和趋势
+
+```text
+请使用 fitness-agent MCP 工具总结我最近 7 天的减脂执行情况。调用 get_weekly_summary，end_date_value 使用 today，days 使用 7。请先用 report_text 总结，再列出平均每日摄入、平均蛋白质、活动总消耗、热量达标天数、蛋白质达标天数和体重变化。
+```
+
+### 查看今天后续怎么吃
+
+```text
+请使用 fitness-agent MCP 工具看看我今天晚餐该怎么安排。调用 get_daily_guidance，date_value 使用 today。请告诉我今天已摄入多少热量、还剩多少目标热量、蛋白质还差多少，以及晚餐建议控制在多少 kcal。
+```
+
 ## 当前限制和注意事项
 
 - 后端不解析自然语言。自然语言解析和估算由 Agent 完成，然后传结构化数据给工具。
@@ -458,6 +507,7 @@ codex mcp get fitness-agent
 - 修改食物数量时，后端不会自动重算营养；Agent 需要把更新后的热量和三大营养素一起传入。
 - 当前 summary 的 `remaining_calories` 是目标热量减摄入热量；`net_calories` 是摄入热量减活动消耗。
 - 当前体重趋势只是简单均值，不代表医学判断。
+- 当前周报和日内建议是文字版，不提供前端图表，也不生成精确菜单。
 
 ## 推荐使用方式
 
@@ -472,6 +522,8 @@ codex mcp get fitness-agent
 6. 每天任意时间调用 get_daily_summary 查看当天状态。
 7. 如果怀疑重复或误记，让 Agent 调用 get_records_for_date 和 delete_record 处理。
 8. 如果需要纠错，让 Agent 先定位记录，再调用 get_record 或 update_record。
+9. 如果想看一周执行情况，让 Agent 调用 get_weekly_summary。
+10. 如果想问今天后续怎么吃，让 Agent 调用 get_daily_guidance。
 ```
 
 开发调试时，推荐流程是：

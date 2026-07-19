@@ -95,6 +95,7 @@ Initial services:
 - `weight_service.py`
 - `activity_service.py`
 - `record_service.py`
+- `report_service.py`
 
 `record_service.py` owns cross-record history lookup, single-record detail lookup,
 partial updates, and hard deletion. Type-specific duplicate checks stay near the
@@ -114,6 +115,13 @@ Update behavior:
 - Updating meal item quantity does not automatically recalculate calories or macros.
 - Meal updates may use `items_append` to add food or `items_replace` to replace all meal items.
 - Edited records keep `updated_at`; full audit logs are out of scope for the MVP.
+
+Report behavior:
+
+- `get_weekly_summary(end_date, days=7)` returns a Chinese `report_text` and structured `daily_points`.
+- `get_daily_guidance(date)` returns day-level text guidance plus remaining calorie/protein fields.
+- `daily_points` are intentionally chart-friendly for a future frontend, but the MVP does not render charts.
+- Guidance remains general coaching advice and does not generate medical advice or precise meal plans.
 
 ### Persistence Layer
 
@@ -230,6 +238,7 @@ Fields:
 - `metadata_json`
 - `note`
 - `created_at`
+- `updated_at`
 
 Source examples:
 

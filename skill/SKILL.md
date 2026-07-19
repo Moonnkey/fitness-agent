@@ -1,12 +1,12 @@
 ---
 name: fitness-agent
-description: Use when the user wants to record, inspect, edit, or delete meals, body weight, activity, update fitness or fat-loss profile data, or ask for daily calorie and macro summaries through the local Fitness Agent MCP tools. This skill guides agents to call update_user_profile, get_user_profile, record_meal, record_weight, get_weight_trend, record_activity, get_records_for_date, get_record, update_record, delete_record, duplicate-check tools, and get_daily_summary with structured or semi-structured payloads while preserving raw user text and uncertainty metadata.
+description: Use when the user wants to record, inspect, edit, or delete meals, body weight, activity, update fitness or fat-loss profile data, ask for daily calorie and macro summaries, weekly reports, trends, or day-level guidance through the local Fitness Agent MCP tools. This skill guides agents to call update_user_profile, get_user_profile, record_meal, record_weight, get_weight_trend, record_activity, get_records_for_date, get_record, update_record, delete_record, duplicate-check tools, get_daily_summary, get_weekly_summary, and get_daily_guidance with structured or semi-structured payloads while preserving raw user text and uncertainty metadata.
 ---
 
 # Fitness Agent
 
 Use the local Fitness Agent MCP tools as the source of truth for profile, meal, weight,
-activity, history, editing, deletion, and daily summary data.
+activity, history, editing, deletion, daily summary, weekly report, and guidance data.
 
 ## Workflow
 
@@ -27,7 +27,10 @@ activity, history, editing, deletion, and daily summary data.
 15. Put estimation assumptions, confidence, cooking method, brand, activity intensity, or missing context in `metadata`.
 16. For recent body-weight questions, call `get_weight_trend`.
 17. For daily totals or remaining calories, call `get_daily_summary`.
-18. Mark calories, macros, and activity burn as estimates unless the source is user-provided or database-derived.
+18. For weekly performance, trend, or "this week" questions, call `get_weekly_summary`.
+19. For "what should I eat later today" or day-level adjustment questions, call `get_daily_guidance`.
+20. Use `report_text` for direct user-facing summaries, and use structured fields such as `daily_points` when the user asks for detailed numbers.
+21. Mark calories, macros, and activity burn as estimates unless the source is user-provided or database-derived.
 
 ## Tool Contracts
 

@@ -160,6 +160,18 @@ The fifth milestone is complete when:
 6. Skill and user guide explain that nutrition is not automatically recalculated on quantity edits.
 ```
 
+## Suggested Sixth Milestone
+
+The sixth milestone is complete when:
+
+```text
+1. Return a 7-day text weekly report through CLI and MCP.
+2. Return structured daily trend points for future chart/front-end use.
+3. Return day-level guidance based on current intake, targets, protein, and activity.
+4. Include Chinese report_text for direct agent responses.
+5. Document limitations: no exact meal planning, food database, RAG, or frontend charts yet.
+```
+
 ## Data Quality Principles
 
 - Prefer structured values over free text once data reaches core services.

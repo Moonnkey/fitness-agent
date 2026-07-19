@@ -107,6 +107,50 @@ def test_weight_activity_and_summary_commands() -> None:
     assert "net calories" in summary_result.output.lower()
 
 
+def test_weekly_summary_and_guidance_commands() -> None:
+    init_db()
+    runner = CliRunner()
+    profile_result = runner.invoke(
+        app,
+        [
+            "profile",
+            "set",
+            "--height-cm",
+            "180",
+            "--weight-kg",
+            "80",
+            "--age",
+            "30",
+            "--sex",
+            "male",
+            "--activity-level",
+            "moderate",
+            "--goal-type",
+            "fat_loss",
+            "--target-calories",
+            "2000",
+            "--target-protein-g",
+            "150",
+        ],
+    )
+    meal_payload = {
+        "date": "today",
+        "meal_type": "breakfast",
+        "items": [{"name": "鸡蛋", "calories": 500, "protein_g": 40}],
+    }
+
+    meal_result = runner.invoke(app, ["meal", "add", "--json", json.dumps(meal_payload)])
+    week_result = runner.invoke(app, ["summary", "week", "--days", "7"])
+    guidance_result = runner.invoke(app, ["guidance", "today"])
+
+    assert profile_result.exit_code == 0
+    assert meal_result.exit_code == 0
+    assert week_result.exit_code == 0
+    assert "过去 7 天" in week_result.output
+    assert guidance_result.exit_code == 0
+    assert "今天目前摄入" in guidance_result.output
+
+
 def test_records_list_and_delete_commands() -> None:
     init_db()
     runner = CliRunner()

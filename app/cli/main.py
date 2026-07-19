@@ -23,6 +23,7 @@ from app.core.services.record_service import (
     get_records_for_date,
     update_record,
 )
+from app.core.services.report_service import get_daily_guidance, get_weekly_summary
 from app.core.services.summary_service import get_daily_summary
 from app.core.services.weight_service import get_weight_trend, record_weight
 
@@ -33,6 +34,7 @@ summary_app = typer.Typer(help="Show daily summaries.")
 weight_app = typer.Typer(help="Record body weight.")
 activity_app = typer.Typer(help="Record activity calories.")
 records_app = typer.Typer(help="List, show, update, and delete recorded data.")
+guidance_app = typer.Typer(help="Show daily coaching guidance.")
 dev_app = typer.Typer(help="Development utilities.")
 
 app.add_typer(profile_app, name="profile")
@@ -41,6 +43,7 @@ app.add_typer(summary_app, name="summary")
 app.add_typer(weight_app, name="weight")
 app.add_typer(activity_app, name="activity")
 app.add_typer(records_app, name="records")
+app.add_typer(guidance_app, name="guidance")
 app.add_typer(dev_app, name="dev")
 
 
@@ -180,6 +183,23 @@ def summary_date(date_value: str) -> None:
     _print_summary(parse_date_value(date_value))
 
 
+@summary_app.command("week")
+def summary_week(
+    days: Annotated[int, typer.Option("--days")] = 7,
+    end_date_value: Annotated[str, typer.Option("--end-date")] = "today",
+) -> None:
+    init_db()
+    output = get_weekly_summary(end_date=parse_date_value(end_date_value), days=days)
+    typer.echo(output.report_text)
+    typer.echo(f"Start date: {output.start_date.isoformat()}")
+    typer.echo(f"End date: {output.end_date.isoformat()}")
+    typer.echo(f"Average daily calories: {output.average_daily_calories}")
+    typer.echo(f"Average daily protein g: {output.average_daily_protein_g}")
+    typer.echo(f"Total activity calories: {output.total_activity_calories}")
+    typer.echo(f"Average net calories: {output.average_net_calories}")
+    typer.echo(f"Weight change kg: {output.weight_change_kg}")
+
+
 def _weight_input_from_json(payload: str) -> WeightEntryInput:
     data: dict[str, Any] = json.loads(payload)
     data["date"] = parse_date_value(data.get("date"))
@@ -277,6 +297,28 @@ def records_update(
     typer.echo(f"Updated {output.record_type}: id={output.record_id}")
     typer.echo(f"Changed fields: {', '.join(output.changed_fields)}")
     typer.echo(json.dumps(output.record, ensure_ascii=False, indent=2))
+
+
+def _print_guidance(target_date: date) -> None:
+    init_db()
+    output = get_daily_guidance(target_date)
+    typer.echo(output.report_text)
+    typer.echo(f"Suggested dinner calories: {output.suggested_dinner_calorie_min}-"
+               f"{output.suggested_dinner_calorie_max}")
+    for item in output.guidance:
+        typer.echo(f"- {item}")
+    for item in output.cautions:
+        typer.echo(f"! {item}")
+
+
+@guidance_app.command("today")
+def guidance_today() -> None:
+    _print_guidance(date.today())
+
+
+@guidance_app.command("date")
+def guidance_date(date_value: str) -> None:
+    _print_guidance(parse_date_value(date_value))
 
 
 @dev_app.command("reset-db")

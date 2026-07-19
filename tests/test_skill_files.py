@@ -14,6 +14,8 @@ def test_skill_file_exists_with_required_frontmatter() -> None:
     assert "get_record" in text
     assert "update_record" in text
     assert "delete_record" in text
+    assert "get_weekly_summary" in text
+    assert "get_daily_guidance" in text
     assert "get_daily_summary" in text
 
 
@@ -29,5 +31,7 @@ def test_tool_contracts_reference_exists() -> None:
     assert "get_record" in text
     assert "update_record" in text
     assert "delete_record" in text
+    assert "get_weekly_summary" in text
+    assert "get_daily_guidance" in text
     assert "check_duplicate_meal" in text
     assert "get_daily_summary" in text

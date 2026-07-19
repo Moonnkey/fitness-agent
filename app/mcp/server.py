@@ -38,6 +38,12 @@ from app.core.services.record_service import (
 from app.core.services.record_service import (
     update_record as update_record_service,
 )
+from app.core.services.report_service import (
+    get_daily_guidance as get_daily_guidance_service,
+)
+from app.core.services.report_service import (
+    get_weekly_summary as get_weekly_summary_service,
+)
 from app.core.services.summary_service import get_daily_summary as get_daily_summary_service
 from app.core.services.weight_service import (
     find_duplicate_weights as find_duplicate_weights_service,
@@ -55,6 +61,7 @@ Use update_user_profile before relying on calorie targets.
 Use record_meal only after the agent has parsed or estimated meal items into structured fields.
 Use record_weight for body-weight observations and record_activity for exercise calorie records.
 Use duplicate check tools or inspect duplicate_warnings before repeating similar records.
+Use get_weekly_summary for recent trends and get_daily_guidance for day-level adjustment advice.
 Preserve user wording in raw_text and estimation assumptions in metadata.
 All calorie and macro values may be estimates unless source says otherwise.
 """
@@ -177,6 +184,20 @@ def build_mcp_server() -> FastMCP:
         """Partially update one record and return changed fields plus the updated record."""
         init_db()
         output = update_record_service(record_type=record_type, record_id=record_id, patch=patch)
+        return _dump_model(output)
+
+    @mcp.tool()
+    def get_weekly_summary(end_date_value: str = "today", days: int = 7) -> dict[str, Any]:
+        """Return a text weekly report plus structured daily trend points."""
+        init_db()
+        output = get_weekly_summary_service(end_date=parse_date_value(end_date_value), days=days)
+        return _dump_model(output)
+
+    @mcp.tool()
+    def get_daily_guidance(date_value: str = "today") -> dict[str, Any]:
+        """Return text daily guidance based on current intake, targets, and activity."""
+        init_db()
+        output = get_daily_guidance_service(parse_date_value(date_value))
         return _dump_model(output)
 
     return mcp

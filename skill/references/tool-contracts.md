@@ -303,3 +303,49 @@ For `meal`, update outer fields directly and use `items_append` or `items_replac
 ```
 
 Use `items_replace` only when the user clearly wants to replace the whole meal contents.
+
+## get_weekly_summary
+
+Input:
+
+```json
+{
+  "end_date_value": "today",
+  "days": 7
+}
+```
+
+Returns a Chinese `report_text` plus structured fields such as:
+
+- `daily_points`
+- `average_daily_calories`
+- `average_daily_protein_g`
+- `total_activity_calories`
+- `average_net_calories`
+- `calorie_target_hit_days`
+- `protein_target_hit_days`
+- `weight_change_kg`
+
+Use this for weekly reports, recent trend questions, and "这周执行得怎么样" requests.
+The `daily_points` array is intended for future chart/front-end use.
+
+## get_daily_guidance
+
+Input:
+
+```json
+{
+  "date_value": "today"
+}
+```
+
+Returns a Chinese `report_text` plus structured fields such as:
+
+- `remaining_calories`
+- `remaining_protein_g`
+- `suggested_dinner_calorie_min`
+- `suggested_dinner_calorie_max`
+- `guidance`
+- `cautions`
+
+Use this when the user asks how to adjust the rest of the day, such as "晚餐怎么吃" or "今天还剩多少热量". Guidance is general coaching advice, not medical advice or a precise meal plan.
